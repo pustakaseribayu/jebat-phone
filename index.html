@@ -1,0 +1,2507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Telefon Jebat</title>
+<style>
+:root{
+  --page:#d8d3e2; --surface:#ffffff; --surface2:#f2f2f7; --text:#111114; --muted:#8a8a93;
+  --line:#e2e2ea; --bubble:#e9e9ef; --bubbleText:#111114; --note:#fffdf4;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --page:#0e0c14; --surface:#000000; --surface2:#1c1c1e; --text:#f2f2f7; --muted:#8e8e96;
+    --line:#2c2c31; --bubble:#262629; --bubbleText:#f2f2f7; --note:#1c1c1e; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#0e0c14; --surface:#000000; --surface2:#1c1c1e; --text:#f2f2f7; --muted:#8e8e96;
+  --line:#2c2c31; --bubble:#262629; --bubbleText:#f2f2f7; --note:#1c1c1e; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+html{height:100%; scroll-padding-top:env(safe-area-inset-top,0px); background:var(--page)}
+body{margin:0; height:100%; background:var(--page); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Roboto,"Segoe UI",sans-serif;
+  display:grid; place-items:center; -webkit-tap-highlight-color:transparent; overflow:hidden}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+button:focus-visible{outline:2px solid #7A86C8; outline-offset:2px; border-radius:8px}
+
+.phone{position:relative; width:390px; height:min(844px, calc(100% - 32px)); border-radius:54px;
+  border:11px solid #19171f; box-shadow:0 0 0 2px #3a3644, 0 30px 80px rgba(20,10,40,.35);
+  overflow:hidden; background:#000; isolation:isolate}
+@media (max-width:500px){
+  body{place-items:stretch}
+  .phone{width:100%; height:100%; border:0; border-radius:0; box-shadow:none}
+}
+
+/* wallpaper: six book spines under a night sky */
+.wall{position:absolute; inset:0; background:
+  radial-gradient(circle at 78% 16%, rgba(255,248,225,.95) 0 22px, rgba(255,248,225,.18) 23px 40px, transparent 41px),
+  linear-gradient(180deg,#120f1e 0%,#221a36 48%,#3b2b4c 100%)}
+.wall .stars{position:absolute; inset:0 0 40% 0; background-image:
+  radial-gradient(1px 1px at 12% 20%, #fff8, transparent), radial-gradient(1px 1px at 30% 8%, #fff9, transparent),
+  radial-gradient(1.5px 1.5px at 52% 26%, #fffa, transparent), radial-gradient(1px 1px at 64% 12%, #fff7, transparent),
+  radial-gradient(1px 1px at 88% 34%, #fff8, transparent), radial-gradient(1px 1px at 22% 40%, #fff6, transparent),
+  radial-gradient(1.5px 1.5px at 42% 46%, #fff8, transparent), radial-gradient(1px 1px at 8% 52%, #fff7, transparent)}
+.spines{position:absolute; left:8%; right:8%; bottom:0; height:30%; display:flex; align-items:flex-end; gap:5px}
+.spine{flex:1; border-radius:4px 4px 0 0; position:relative; box-shadow:inset -6px 0 0 rgba(0,0,0,.18)}
+.spine::before,.spine::after{content:""; position:absolute; left:18%; right:18%; height:2px; background:#e8cf86; opacity:.75}
+.spine::before{top:12%} .spine::after{top:calc(12% + 6px)}
+.glad{position:absolute; right:14%; bottom:28%; width:70px; height:150px; opacity:.85}
+.home-dim{position:absolute; inset:0; background:rgba(10,6,20,.35); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); opacity:0; transition:opacity .35s}
+.phone.at-home .home-dim{opacity:1}
+
+/* status bar */
+.status{position:absolute; top:0; left:0; right:0; height:48px; z-index:50; display:flex; align-items:center;
+  justify-content:space-between; padding:6px 30px 0; font-weight:600; font-size:15px; color:#fff; pointer-events:none; transition:color .2s}
+.phone.in-app .status{color:var(--text)}
+.status .icons{display:flex; gap:6px; align-items:center}
+.status svg{fill:currentColor}
+
+/* lock screen */
+.lock{position:absolute; inset:0; z-index:20; color:#fff; display:flex; flex-direction:column; align-items:center;
+  padding-top:86px; transition:transform .45s cubic-bezier(.3,.7,.2,1), opacity .45s}
+.lock.gone{transform:translateY(-100%); opacity:0; pointer-events:none}
+.lock .date{font-size:19px; font-weight:500; opacity:.9}
+.lock .clock{font-size:88px; font-weight:700; letter-spacing:-2px; line-height:1; margin-top:2px; font-variant-numeric:tabular-nums}
+.lock .notif{margin-top:26px; width:calc(100% - 28px); background:rgba(255,255,255,.16); backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px); border-radius:20px; padding:12px 14px; display:flex; gap:10px; text-align:left}
+.lock .notif .ic{width:36px; height:36px; border-radius:9px; flex:none}
+.lock .notif b{font-size:14px} .lock .notif p{margin:2px 0 0; font-size:14px; opacity:.92}
+.lock .notif .t{font-size:12px; opacity:.7; margin-left:auto; flex:none}
+.lock .open-hint{margin-top:auto; margin-bottom:46px; font-size:15px; opacity:.85; padding:10px 20px}
+
+.pad{position:absolute; inset:0; z-index:30; display:flex; flex-direction:column; align-items:center; padding-top:90px;
+  color:#fff; background:rgba(12,8,22,.55); backdrop-filter:blur(26px); -webkit-backdrop-filter:blur(26px);
+  opacity:0; pointer-events:none; transition:opacity .25s}
+.pad.show{opacity:1; pointer-events:auto}
+.pad h2{font-size:20px; font-weight:500; margin:0}
+.dots{display:flex; gap:20px; margin:22px 0 10px}
+.dots i{width:13px; height:13px; border-radius:50%; border:1.5px solid #fff; transition:background .1s}
+.dots i.on{background:#fff}
+.dots.shake{animation:shake .4s}
+@keyframes shake{20%{transform:translateX(-12px)}40%{transform:translateX(10px)}60%{transform:translateX(-7px)}80%{transform:translateX(4px)}}
+.hint{font-size:13px; opacity:.7; min-height:18px; margin-bottom:26px; text-align:center; padding:0 30px}
+.keys{display:grid; grid-template-columns:repeat(3,78px); gap:16px 26px}
+.key{width:78px; height:78px; border-radius:50%; background:rgba(255,255,255,.16); display:flex; flex-direction:column;
+  align-items:center; justify-content:center; font-size:34px; font-weight:400; line-height:1}
+.key small{font-size:10px; letter-spacing:2px; font-weight:600; margin-top:2px; opacity:.85}
+.key:active{background:rgba(255,255,255,.4)}
+.pad .cancel{margin-top:auto; margin-bottom:44px; font-size:16px; align-self:flex-end; margin-right:48px}
+
+/* home */
+.home{position:absolute; inset:0; z-index:10; padding:70px 22px 0; display:flex; flex-direction:column}
+.home{opacity:0; pointer-events:none; transition:opacity .35s .1s}
+.phone.at-home .home{opacity:1; pointer-events:auto}
+.grid{display:grid; grid-template-columns:repeat(4,1fr); gap:24px 0; justify-items:center}
+.app{display:flex; flex-direction:column; align-items:center; gap:6px; color:#fff; font-size:12px; width:72px}
+.app .ic{width:60px; height:60px; border-radius:15px; display:grid; place-items:center; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.app:active .ic{filter:brightness(.8)}
+.widget{grid-column:span 4; width:100%; border-radius:22px; padding:16px 18px; color:#fff; margin-bottom:4px;
+  background:rgba(255,255,255,.14); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px)}
+.widget .q{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; font-size:16px; line-height:1.45; font-style:italic}
+.widget .src{font-size:12px; opacity:.7; margin-top:8px}
+.dock{margin-top:auto; margin-bottom:12px; display:flex; justify-content:space-around; padding:14px 6px; border-radius:30px;
+  background:rgba(255,255,255,.18); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px)}
+.dock .app > span:last-child{display:none}
+
+/* app views */
+.views{position:absolute; inset:0; z-index:40; pointer-events:none}
+.view{position:absolute; inset:0; background:var(--surface); color:var(--text); display:flex; flex-direction:column;
+  pointer-events:auto; transform:translateX(100%); transition:transform .32s cubic-bezier(.3,.7,.2,1)}
+.view.from-home{transform:scale(.88); opacity:0; transition:transform .3s cubic-bezier(.3,.7,.2,1), opacity .25s}
+.view.in{transform:none; opacity:1}
+.view.under{transform:translateX(-28%)}
+.nav{flex:none; padding:52px 12px 6px; display:flex; align-items:center; min-height:96px; position:relative;
+  border-bottom:.5px solid var(--line); background:color-mix(in srgb, var(--surface) 88%, transparent)}
+.nav .back{color:#2f7cf6; font-size:17px; display:flex; align-items:center; gap:2px; padding:8px 4px; z-index:1}
+.nav .back svg{width:12px; height:20px}
+.nav .mid{position:absolute; left:70px; right:70px; bottom:6px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:3px}
+.nav .mid .nm{font-size:12px; color:var(--text)} .nav .mid .sub{font-size:11px; color:var(--muted)}
+.big-title{font-size:34px; font-weight:700; padding:6px 18px 10px; letter-spacing:.3px}
+.scroll{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch}
+.homebar{position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; border-radius:3px;
+  background:#fff; z-index:60; opacity:.9}
+.phone.in-app .homebar{background:var(--text)}
+.homebar-hit{position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:200px; height:26px; z-index:61}
+
+/* message list */
+.row-item{display:flex; gap:12px; align-items:center; padding:10px 16px; width:100%; text-align:left}
+.row-item .body{flex:1; min-width:0; border-bottom:.5px solid var(--line); padding-bottom:12px}
+.row-item .top{display:flex; justify-content:space-between; gap:8px}
+.row-item b{font-size:16px; font-weight:600}
+.row-item .tm{font-size:14px; color:var(--muted); flex:none}
+.row-item p{margin:3px 0 0; font-size:14px; color:var(--muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.3}
+.av{border-radius:50%; display:grid; place-items:center; font-weight:600; flex:none}
+.av.dark{box-shadow:inset 0 0 0 1.5px #77727f}
+.gav{width:52px; height:52px; border-radius:50%; background:var(--surface2); display:grid; grid-template-columns:repeat(3,12px); gap:3px; place-content:center; flex:none}
+.gav.sm{width:30px; height:30px; grid-template-columns:repeat(3,6px); gap:2px}
+.gav i{width:12px; height:12px; border-radius:50%}
+.gav.sm i{width:6px; height:6px}
+
+/* chat */
+.chat{padding:10px 12px 16px; display:flex; flex-direction:column}
+.day{align-self:center; font-size:12px; color:var(--muted); margin:14px 0 8px; font-weight:500}
+.msg{display:flex; align-items:flex-end; gap:6px; margin-top:2px; max-width:100%}
+.msg.mine{justify-content:flex-end}
+.msg.gap{margin-top:9px}
+.msg .sp{width:28px; flex:none}
+.bw{display:flex; flex-direction:column; max-width:74%}
+.msg.mine .bw{align-items:flex-end}
+.who{font-size:11px; color:var(--muted); margin:0 0 2px 12px}
+.bubble{padding:8px 13px; border-radius:19px; font-size:16px; line-height:1.3; background:var(--bubble); color:var(--bubbleText);
+  white-space:pre-wrap; overflow-wrap:anywhere}
+.msg.mine .bubble{border-bottom-right-radius:19px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.msg.last.mine .bubble{border-bottom-right-radius:5px}
+.msg.last.theirs .bubble{border-bottom-left-radius:5px}
+.bubble.emoji{background:none !important; font-size:40px; padding:0 2px; line-height:1.1}
+.receipt{align-self:flex-end; font-size:11px; color:var(--muted); margin:3px 4px 0}
+.composer{flex:none; display:flex; gap:8px; align-items:center; padding:8px 12px 30px; border-top:.5px solid var(--line)}
+.composer .plus{width:34px; height:34px; border-radius:50%; background:var(--surface2); display:grid; place-items:center; color:var(--muted); font-size:22px}
+.composer .field{flex:1; border:1px solid var(--line); border-radius:18px; padding:7px 14px; color:var(--muted); font-size:16px}
+
+/* notes */
+.view.notes{background:var(--surface2)}
+.group{margin:0 16px 16px; background:var(--surface); border-radius:12px; overflow:hidden}
+.note-row{display:block; width:100%; text-align:left; padding:11px 16px; border-bottom:.5px solid var(--line)}
+.note-row:last-child{border-bottom:0}
+.note-row b{font-size:16px; display:block}
+.note-row span{font-size:14px; color:var(--muted)}
+.note-body{padding:6px 20px 40px; background:var(--note); min-height:100%}
+.note-body .when{font-size:13px; color:var(--muted); text-align:center; margin:4px 0 14px}
+.note-body h1{font-size:26px; margin:0 0 12px}
+.note-body p{font-size:17px; line-height:1.5; white-space:pre-wrap; margin:0}
+
+/* gallery */
+.photos{display:grid; grid-template-columns:repeat(3,1fr); gap:2px}
+.ph{aspect-ratio:1; background-size:cover; background-position:center; position:relative}
+.viewer{flex:1; display:flex; flex-direction:column; justify-content:center; background:#000}
+.viewer .img{aspect-ratio:3/4; width:100%; background-size:cover; background-position:center}
+.viewer .cap{color:#fff; padding:16px 20px; font-size:15px; line-height:1.4}
+.viewer .cap small{display:block; color:#aaa; margin-top:4px}
+.view.dark{background:#000}
+.view.dark .nav{background:#000; border-color:#222}
+
+/* calendar */
+.cal-head{padding:0 18px 8px; color:#e0443e; font-size:17px; font-weight:600}
+.week{display:grid; grid-template-columns:repeat(7,1fr); text-align:center; padding:0 10px 12px; border-bottom:.5px solid var(--line)}
+.week .dn{font-size:11px; color:var(--muted); margin-bottom:6px}
+.week .dd{width:34px; height:34px; margin:auto; border-radius:50%; display:grid; place-items:center; font-size:18px}
+.week .dd.today{background:#e0443e; color:#fff; font-weight:600}
+.ev{display:flex; gap:12px; padding:12px 18px; border-bottom:.5px solid var(--line)}
+.ev .bar{width:4px; border-radius:2px; flex:none}
+.ev .w{font-size:13px; color:var(--muted); margin-bottom:2px}
+.ev b{font-size:16px; font-weight:600}
+
+.toast{position:absolute; left:50%; top:62px; transform:translate(-50%,-20px); z-index:70; background:rgba(30,28,36,.9); color:#fff;
+  font-size:14px; padding:10px 16px; border-radius:14px; opacity:0; transition:.25s; pointer-events:none; white-space:nowrap}
+.toast.show{opacity:1; transform:translate(-50%,0)}
+
+
+/* pictures */
+.av{position:relative; overflow:hidden}
+.av img,.ph img,.viewer .img img,.wall-img img,.bubble.pic img,.note-img img,.lightbox .lb-img img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.ph{overflow:hidden}
+.viewer .img{position:relative; overflow:hidden}
+.viewer .img.has{aspect-ratio:auto; height:70%}
+.viewer .img.has img{object-fit:contain; background:#000}
+.wall-img{position:absolute; inset:0; z-index:3; background:#000}
+.bubble.pic{position:relative; width:210px; height:260px; padding:0; overflow:hidden; background:var(--bubble); display:block}
+.bubble.pic .missing{position:absolute; inset:0; display:grid; place-items:center; font-size:30px; opacity:.4}
+.bubble.pic img{z-index:1}
+.note-img{position:relative; margin-top:18px; width:100%; aspect-ratio:4/3; border-radius:12px; overflow:hidden; background:var(--line)}
+.lightbox{position:absolute; inset:0; z-index:80; background:#000; display:none; align-items:center; justify-content:center}
+.lightbox.show{display:flex}
+.lightbox .lb-img{position:relative; width:100%; height:80%}
+.lightbox .lb-img img{object-fit:contain}
+.lightbox .lb-close{position:absolute; top:56px; left:16px; color:#fff; font-size:17px}
+/* lock button on home */
+.home-mini{margin-top:auto}
+.home-mini:not([hidden]) + .lock-btn{margin-top:0}
+.lock-btn{align-self:center; margin-top:auto; margin-bottom:12px; display:flex; align-items:center; gap:6px; color:#fff; font-size:13px;
+  padding:7px 14px; border-radius:16px; background:rgba(255,255,255,.16); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
+.lock-btn + .dock{margin-top:0}
+.key.del{background:none; font-size:24px}
+
+
+/* ---------- shared ---------- */
+.ib{display:inline-grid; place-items:center; width:40px; height:40px; color:inherit; border-radius:10px}
+.ib svg{width:25px; height:25px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round}
+.ib.sm{width:28px; height:28px} .ib.sm svg{width:14px; height:14px}
+.ib.like.on svg,.pv-fav.on svg,.sv-like.on svg{fill:#ed4956; stroke:#ed4956}
+.ib.save.on svg{fill:currentColor}
+.ib:active{transform:scale(.9)}
+.sp1{flex:1}
+.b{font-weight:600; color:inherit}
+.mention{color:#4f8ef7; font-weight:500}
+.empty{padding:40px 20px; text-align:center; color:var(--muted); font-size:14px}
+.nav-r{position:absolute; right:10px; bottom:6px; z-index:1}
+.nav .mid .nm b{font-size:16px}
+
+.sheet{position:absolute; inset:0; z-index:75; background:rgba(0,0,0,.35); display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition:opacity .2s}
+.sheet.show{opacity:1; pointer-events:auto}
+.sheet-card{width:100%; max-height:78%; overflow-y:auto; background:var(--surface); color:var(--text); border-radius:16px 16px 0 0; padding:8px 0 30px;
+  transform:translateY(30px); transition:transform .25s}
+.sheet.show .sheet-card{transform:none}
+.sheet-card::before{content:""; display:block; width:38px; height:5px; border-radius:3px; background:var(--line); margin:4px auto 10px}
+.sh-title{text-align:center; font-weight:600; font-size:16px; padding:0 16px 10px; border-bottom:.5px solid var(--line); margin-bottom:6px}
+.sh-btn,.sh-cancel{display:block; width:100%; padding:14px 18px; font-size:16px; text-align:left; border-top:.5px solid var(--line)}
+.sh-btn.red{color:#ed4956}
+.sh-cancel{text-align:center; font-weight:600}
+.sh-text{padding:6px 18px 12px; font-size:15px; line-height:1.5}
+.sh-text small{display:block; color:var(--muted); font-size:13px}
+.sh-area{display:block; width:calc(100% - 32px); margin:4px 16px 12px; min-height:90px; border:1px solid var(--line); border-radius:10px; padding:10px; font:inherit; font-size:15px; background:var(--surface2); color:var(--text); resize:vertical}
+
+/* ---------- Lensa ---------- */
+.view.ig{background:var(--surface)}
+.ig-top{flex:none; display:flex; align-items:center; gap:2px; padding:50px 6px 4px 8px; border-bottom:.5px solid var(--line)}
+.ig-top .back{padding:8px 2px}
+.ig-logo{font-family:"Snell Roundhand","Brush Script MT","Segoe Script",cursive; font-size:28px; margin-left:4px; line-height:1}
+.ig-tabs{flex:none; display:flex; justify-content:space-around; align-items:center; padding:6px 0 30px; border-top:.5px solid var(--line); background:var(--surface)}
+.ig-tabs button{width:48px; height:40px; display:grid; place-items:center; opacity:.55}
+.ig-tabs button.on{opacity:1}
+.ig-tabs svg{width:26px; height:26px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round}
+.ig-tabs button.on svg{stroke-width:2.6}
+
+.ring{display:inline-grid; place-items:center; border-radius:50%; background:conic-gradient(from 200deg,#C9A13B,#B3262E,#6B3A7D,#8C97D4,#C9A13B); flex:none}
+.ring > .av{box-shadow:0 0 0 2px var(--surface)}
+.ring.seen{background:var(--line)}
+.tray{display:flex; gap:12px; padding:10px 12px 12px; overflow-x:auto; border-bottom:.5px solid var(--line); scrollbar-width:none}
+.tray::-webkit-scrollbar{display:none}
+.st{display:flex; flex-direction:column; align-items:center; gap:4px; width:68px; flex:none; position:relative}
+.st > span:last-child{font-size:11px; max-width:68px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.st .plus{position:absolute; right:4px; top:44px; width:20px; height:20px; border-radius:50%; background:#4f8ef7; color:#fff; font-size:16px; line-height:18px; border:2px solid var(--surface)}
+
+.post{border-bottom:.5px solid var(--line); padding-bottom:10px}
+.phd{display:flex; align-items:center; padding:8px 6px 8px 12px}
+.phd .pwho{display:flex; align-items:center; gap:9px; text-align:left; flex:1; min-width:0}
+.phd .pwho b{font-size:14px; display:block}
+.phd .pwho small{font-size:12px; color:var(--muted)}
+.phd .ib svg{width:20px; height:20px}
+.media{position:relative; width:100%; aspect-ratio:1; overflow:hidden; user-select:none; -webkit-user-select:none; cursor:pointer}
+.media img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.burst{position:absolute; left:50%; top:50%; width:96px; height:96px; margin:-48px 0 0 -48px; opacity:0; transform:scale(.3); pointer-events:none; z-index:2}
+.burst svg{width:100%; height:100%; fill:#fff; stroke:none; filter:drop-shadow(0 4px 12px rgba(0,0,0,.3))}
+.burst.pop{animation:pop .8s ease-out}
+@keyframes pop{15%{opacity:.95; transform:scale(1.15)}30%{transform:scale(.95)}45%{transform:scale(1)}80%{opacity:.95}100%{opacity:0; transform:scale(1)}}
+.acts{display:flex; align-items:center; padding:2px 4px 0}
+.likes{font-size:14px; padding:2px 13px 4px}
+.cap,.cprev{font-size:14px; line-height:1.4; padding:0 13px 3px; overflow-wrap:anywhere}
+.viewc{font-size:14px; color:var(--muted); padding:2px 13px 4px; display:block}
+.ptime{font-size:11px; color:var(--muted); padding:4px 13px 0}
+
+.ig-search{padding:8px 12px}
+.ig-search input{width:100%; border:0; border-radius:10px; padding:9px 12px; font:inherit; font-size:16px; background:var(--surface2); color:var(--text)}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:2px}
+.tile{aspect-ratio:1; position:relative; overflow:hidden}
+.tile img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.tile.sel{outline:3px solid #4f8ef7; outline-offset:-3px}
+.urow{display:flex; align-items:center; gap:10px; padding:8px 14px}
+.uinfo{display:flex; align-items:center; gap:11px; flex:1; min-width:0; text-align:left}
+.uinfo b{font-size:14px; display:block}
+.uinfo small{font-size:13px; color:var(--muted)}
+.fbtn{background:#4f8ef7; color:#fff; font-weight:600; font-size:13px; padding:7px 16px; border-radius:8px; flex:none}
+.fbtn.ghost{background:var(--surface2); color:var(--text)}
+.fbtn[disabled]{opacity:.6}
+.more-note{padding:10px 14px 30px; font-size:13px; color:var(--muted)}
+
+.prof{padding:10px 0 0}
+.prow{display:flex; align-items:center; gap:18px; padding:4px 16px 10px}
+.stats{flex:1; display:flex; justify-content:space-around; text-align:center}
+.stats b{display:block; font-size:17px}
+.stats span{font-size:12px; color:var(--muted)}
+.pname{font-weight:600; font-size:14px; padding:0 16px}
+.pbio{font-size:14px; line-height:1.4; padding:2px 16px 0; white-space:pre-wrap}
+.pbtns{display:flex; gap:6px; padding:12px 16px}
+.gbtn{flex:1; background:var(--surface2); border-radius:8px; padding:8px; font-size:14px; font-weight:600}
+.gbtn.blue{background:#4f8ef7; color:#fff}
+.hls{display:flex; gap:14px; padding:4px 16px 12px; overflow-x:auto}
+.hls button{display:flex; flex-direction:column; align-items:center; gap:4px; flex:none}
+.hl{width:62px; height:62px; border-radius:50%; position:relative; overflow:hidden; box-shadow:0 0 0 2px var(--surface), 0 0 0 3px var(--line)}
+.hl img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.hls small{font-size:11px}
+.ptabs{display:flex; border-top:.5px solid var(--line)}
+.ptabs button{flex:1; padding:10px; display:grid; place-items:center; opacity:.45; border-bottom:1.5px solid transparent}
+.ptabs button.on{opacity:1; border-bottom-color:var(--text)}
+.ptabs svg{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.9}
+.prof-menu{position:absolute; right:12px; top:8px}
+
+.clist{padding:6px 0 10px}
+.crow{display:flex; gap:10px; padding:9px 12px; align-items:flex-start}
+.cbody{flex:1; font-size:14px; line-height:1.4; overflow-wrap:anywhere}
+.cmeta{font-size:12px; color:var(--muted); margin-top:4px}
+.cmeta button{font-weight:600; color:var(--muted)}
+.cbox,.dmbox{flex:none; display:flex; align-items:center; gap:10px; padding:8px 12px 30px; border-top:.5px solid var(--line)}
+.cbox input,.dmbox input{flex:1; min-width:0; border:1px solid var(--line); border-radius:20px; padding:9px 14px; font:inherit; font-size:16px; background:var(--surface); color:var(--text)}
+.post-btn{color:#4f8ef7; font-weight:600; font-size:15px}
+.dm-empty{display:flex; flex-direction:column; align-items:center; gap:6px; padding:30px 0 10px; text-align:center}
+.dm-empty b{font-size:17px}
+.dm-empty small{color:var(--muted); font-size:13px}
+.dm-empty .gbtn{flex:none; padding:7px 14px; margin-top:6px}
+.act-row{display:flex; align-items:center; gap:10px; padding:8px 12px; width:100%; text-align:left}
+.act-row .tx{flex:1; font-size:14px; line-height:1.35}
+.act-row .tx small{color:var(--muted)}
+.act-row .th{width:44px; height:44px; flex:none; position:relative; overflow:hidden; border-radius:4px}
+.act-row .th img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.sect{font-weight:700; font-size:16px; padding:14px 14px 4px}
+
+.cmp-prev{width:100%; aspect-ratio:1; position:relative; overflow:hidden}
+.cmp-prev img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.cmp-cap{display:block; width:100%; border:0; border-bottom:.5px solid var(--line); padding:14px; font:inherit; font-size:16px; min-height:80px; background:var(--surface); color:var(--text); resize:none}
+.cmp-lbl{font-weight:600; font-size:14px; padding:12px 14px 8px}
+.share-btn{color:#4f8ef7; font-weight:600; font-size:16px; padding:8px}
+
+/* stories */
+.view.story-view{background:#000; color:#fff}
+.sv{position:absolute; inset:0; display:flex; flex-direction:column; background:#000}
+.sv-bars{display:flex; gap:3px; padding:50px 10px 0}
+.sv-bars i{flex:1; height:2.5px; border-radius:2px; background:rgba(255,255,255,.35); overflow:hidden}
+.sv-bars i b{display:block; height:100%; width:0; background:#fff}
+.sv-bars i.done b{width:100%}
+.sv-bars i.run b{animation:fill 5s linear forwards}
+@keyframes fill{to{width:100%}}
+.sv-head{display:flex; align-items:center; gap:8px; padding:10px 6px 8px 12px; z-index:2}
+.sv-head b{font-size:14px} .sv-head small{font-size:13px; opacity:.7}
+.sv-media{flex:1; position:relative; overflow:hidden; border-radius:10px; margin:0 4px; display:grid; place-items:center}
+.sv-media img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.sv-text{position:relative; z-index:1; font-size:24px; font-weight:700; text-align:center; padding:0 26px; line-height:1.3; text-shadow:0 2px 12px rgba(0,0,0,.45); white-space:pre-wrap}
+.sv-prev,.sv-next{position:absolute; top:110px; bottom:100px; width:35%; z-index:1}
+.sv-prev{left:0} .sv-next{right:0; width:65%}
+.sv-foot{display:flex; align-items:center; gap:8px; padding:10px 10px 30px; z-index:2}
+.sv-foot input{flex:1; min-width:0; background:transparent; border:1px solid rgba(255,255,255,.5); border-radius:22px; padding:10px 16px; font:inherit; font-size:16px; color:#fff}
+.sv-foot input::placeholder{color:rgba(255,255,255,.75)}
+.sv-own{font-size:13px; opacity:.75; padding:10px 6px}
+
+/* ---------- Galeri ---------- */
+.seg{display:flex; gap:6px; padding:0 16px 12px}
+.seg button{padding:6px 14px; border-radius:16px; background:var(--surface2); font-size:14px; font-weight:500}
+.seg button.on{background:var(--text); color:var(--surface)}
+.ph .fav-dot{position:absolute; left:6px; bottom:4px; color:#fff; font-size:14px; text-shadow:0 1px 4px rgba(0,0,0,.5); z-index:2}
+.pv-stage{position:relative; flex:1; display:flex; align-items:center; overflow:hidden}
+.pv-stage .img{width:100%; aspect-ratio:3/4; position:relative; overflow:hidden}
+.pv-stage .img img{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000}
+.pv-arrow{position:absolute; top:50%; margin-top:-22px; width:44px; height:44px; border-radius:50%; background:rgba(0,0,0,.35); color:#fff; font-size:30px; line-height:40px; z-index:2}
+.pv-arrow.l{left:8px} .pv-arrow.r{right:8px}
+.pv-bar{display:flex; justify-content:space-around; padding:6px 0 30px; color:#fff}
+.view.dark .viewer{flex:1}
+
+/* ---------- Muzik ---------- */
+.view.music{background:var(--surface)}
+.pl-card{margin:0 16px 14px; border-radius:16px; padding:18px; color:#fff; position:relative; overflow:hidden}
+.pl-card small{font-size:12px; opacity:.8; letter-spacing:1px; font-weight:600}
+.pl-card h3{font-size:24px; margin:4px 0 2px}
+.pl-card p{font-size:13px; opacity:.85}
+.pl-btns{display:flex; gap:8px; margin-top:14px}
+.pl-btns button,.pl-btns a{flex:1; display:flex; align-items:center; justify-content:center; gap:6px; background:rgba(255,255,255,.2); color:#fff; border-radius:10px; padding:9px; font-size:14px; font-weight:600; text-decoration:none}
+.pl-btns svg{width:16px; height:16px; fill:currentColor}
+.song{display:flex; align-items:center; gap:12px; padding:7px 16px; width:100%; text-align:left}
+.song .th{width:52px; height:52px; border-radius:8px; flex:none; position:relative; overflow:hidden}
+.song .th img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.song .tx{flex:1; min-width:0; border-bottom:.5px solid var(--line); padding:6px 0 12px}
+.song b{display:block; font-size:15px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.song small{font-size:13px; color:var(--muted)}
+.song.now b{color:#fa2d48}
+.song.off{opacity:.5}
+.eq{display:inline-flex; gap:2px; align-items:flex-end; height:12px; margin-right:6px}
+.eq i{width:3px; background:#fa2d48; animation:eq .9s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:.2s} .eq i:nth-child(3){animation-delay:.4s}
+@keyframes eq{0%,100%{height:3px}50%{height:12px}}
+.chan{display:flex; align-items:center; gap:10px; margin:14px 16px 20px; padding:12px 14px; border-radius:12px; background:var(--surface2); text-decoration:none; color:var(--text); font-size:15px; font-weight:500}
+.chan .yt{width:30px; height:21px; border-radius:6px; background:#ff0033; display:grid; place-items:center; flex:none}
+.chan .yt svg{width:10px; height:10px; fill:#fff}
+.mini{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:14px; background:color-mix(in srgb, var(--surface2) 92%, transparent); color:var(--text); box-shadow:0 4px 18px rgba(0,0,0,.15); width:100%; text-align:left}
+.mini[hidden]{display:none}
+.mini .th{width:40px; height:40px; border-radius:7px; position:relative; overflow:hidden; flex:none}
+.mini .th img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.mini .tx{flex:1; min-width:0}
+.mini b{display:block; font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.mini small{font-size:12px; color:var(--muted)}
+.mini .ib svg{fill:currentColor; stroke:none; width:22px; height:22px}
+.music-mini{flex:none; padding:8px 12px 30px; border-top:.5px solid var(--line)}
+.home-mini{margin:auto 0 10px}
+.home-mini .mini{background:rgba(255,255,255,.2); color:#fff; backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px)}
+.home-mini .mini small{color:rgba(255,255,255,.75)}
+.np-art{margin:24px 20px 0; aspect-ratio:16/9; border-radius:14px; position:relative; overflow:hidden; display:grid; place-items:center; color:#fff; font-size:13px; text-align:center}
+.np-art img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.6)}
+.np-art span{position:relative; padding:0 20px}
+.np-info{padding:22px 24px 6px}
+.np-info b{display:block; font-size:21px}
+.np-info small{font-size:16px; color:var(--muted)}
+.np-bar{margin:14px 24px 4px; height:5px; border-radius:3px; background:var(--line); position:relative; cursor:pointer}
+.np-bar i{position:absolute; left:0; top:0; bottom:0; border-radius:3px; background:var(--text); width:0}
+.np-times{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin:0 24px; font-variant-numeric:tabular-nums}
+.np-ctl{display:flex; justify-content:center; align-items:center; gap:34px; padding:18px 0}
+.np-ctl button svg{fill:currentColor; width:34px; height:34px}
+.np-ctl .big svg{width:56px; height:56px}
+.np-links{display:flex; gap:10px; padding:0 24px 30px}
+.np-links a{flex:1; text-align:center; padding:11px; border-radius:10px; background:var(--surface2); color:var(--text); text-decoration:none; font-size:14px; font-weight:600}
+.yt-host{position:absolute; z-index:42; left:20px; right:20px; top:120px; aspect-ratio:16/9; border-radius:14px; overflow:hidden; background:#000}
+.yt-host iframe{width:100%; height:100%; border:0; display:block}
+.phone:not(.np-open) .yt-host{left:-9999px; right:auto; width:240px}
+
+/* ---------- Phone app ---------- */
+.app{position:relative}
+.badge{position:absolute; top:-6px; right:0; min-width:22px; height:22px; padding:0 6px; border-radius:11px; background:#ff3b30; color:#fff; font-size:13px; font-weight:600; display:grid; place-items:center; z-index:2; box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+.view.tel{background:var(--surface)}
+.tel-tabs{flex:none; display:flex; justify-content:space-around; padding:6px 0 28px; border-top:.5px solid var(--line); background:color-mix(in srgb, var(--surface) 92%, transparent)}
+.tel-tabs button{display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10px; color:var(--muted); width:64px; position:relative}
+.tel-tabs button.on{color:#007aff}
+.tel-tabs svg{width:26px; height:26px; fill:currentColor}
+.tel-tabs .badge{top:-4px; right:8px; min-width:18px; height:18px; font-size:11px}
+.trow{display:flex; align-items:center; gap:12px; padding:8px 8px 8px 16px; width:100%; text-align:left}
+.trow .tx{flex:1; min-width:0; border-bottom:.5px solid var(--line); padding:4px 0 10px; display:flex; align-items:center; gap:8px}
+.trow .nm{flex:1; min-width:0}
+.trow b{display:block; font-size:16px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.trow b.miss{color:#ff3b30}
+.trow small{font-size:13px; color:var(--muted); display:flex; align-items:center; gap:4px}
+.trow small svg{width:12px; height:12px; fill:var(--muted)}
+.trow .when{font-size:14px; color:var(--muted); flex:none}
+.info{width:26px; height:26px; border-radius:50%; border:1.5px solid #007aff; color:#007aff; font:italic 600 14px Georgia, serif; display:grid; place-items:center; flex:none}
+.seg2{display:flex; margin:0 16px 10px; background:var(--surface2); border-radius:9px; padding:2px}
+.seg2 button{flex:1; padding:6px; border-radius:7px; font-size:13px; font-weight:600}
+.seg2 button.on{background:var(--surface); box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.letter{font-size:13px; font-weight:600; color:var(--muted); padding:10px 16px 2px; background:var(--surface2)}
+.mycard{display:flex; align-items:center; gap:14px; padding:6px 16px 14px; border-bottom:.5px solid var(--line); width:100%; text-align:left}
+.mycard b{font-size:20px; display:block} .mycard small{color:var(--muted); font-size:13px}
+.kp{display:flex; flex-direction:column; align-items:center; padding-top:20px}
+.kp-num{font-size:34px; height:46px; letter-spacing:1px; min-width:10px; text-align:center; font-variant-numeric:tabular-nums}
+.kp-grid{display:grid; grid-template-columns:repeat(3,78px); gap:14px 26px; margin-top:16px}
+.kp-grid button{width:78px; height:78px; border-radius:50%; background:var(--surface2); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:32px; line-height:1}
+.kp-grid button small{font-size:10px; letter-spacing:2px; font-weight:600; margin-top:2px}
+.kp-grid button:active{filter:brightness(.85)}
+.kp-row{display:grid; grid-template-columns:repeat(3,78px); gap:26px; margin-top:16px; align-items:center}
+.callbtn{width:78px; height:78px; border-radius:50%; background:#34c759; display:grid; place-items:center}
+.callbtn svg{width:34px; height:34px; fill:#fff}
+.kp-del{font-size:24px; color:var(--muted)}
+.vm{border-bottom:.5px solid var(--line)}
+.vm .trow .tx{border:0}
+.vm-body{padding:0 16px 14px 16px}
+.vm-t{font-size:14px; line-height:1.45; background:var(--surface2); border-radius:10px; padding:10px 12px; margin-bottom:10px}
+.vm-t small{display:block; font-size:11px; color:var(--muted); font-weight:600; letter-spacing:.5px; margin-bottom:3px}
+.vm-ctl{display:flex; align-items:center; gap:12px}
+.vm-play{width:34px; height:34px; border-radius:50%; background:#007aff; display:grid; place-items:center; flex:none}
+.vm-play svg{width:14px; height:14px; fill:#fff}
+.vm-bar{flex:1; height:4px; border-radius:2px; background:var(--line); position:relative}
+.vm-bar i{position:absolute; left:0; top:0; bottom:0; width:0; border-radius:2px; background:#007aff}
+.vm-time{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; width:34px; text-align:right}
+.vm-acts{display:flex; gap:18px; margin-top:12px}
+.vm-acts button{color:#007aff; font-size:15px}
+.vm-acts button.red{color:#ff3b30}
+.ccard{display:flex; flex-direction:column; align-items:center; padding:10px 16px 0}
+.ccard h3{font-size:28px; font-weight:400; margin:10px 0 14px}
+.cacts{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; width:100%; margin-bottom:14px}
+.cacts button{background:var(--surface2); border-radius:12px; padding:9px 0 7px; display:flex; flex-direction:column; align-items:center; gap:3px; color:#007aff; font-size:11px}
+.cacts svg{width:22px; height:22px; fill:#007aff}
+.cfield{width:100%; background:var(--surface2); border-radius:12px; padding:10px 14px; margin-bottom:10px; text-align:left}
+.cfield small{display:block; font-size:13px; color:var(--text)} .cfield span{color:#007aff; font-size:16px}
+.cfield p{font-size:15px; line-height:1.4; white-space:pre-wrap}
+.view.call{background:linear-gradient(170deg,#3a3550,#14111d 70%); color:#fff}
+.call-top{display:flex; flex-direction:column; align-items:center; padding-top:90px}
+.call-top h3{font-size:32px; font-weight:400; margin-top:16px}
+.call-top p{font-size:17px; opacity:.7; margin-top:4px}
+.call-grid{display:grid; grid-template-columns:repeat(3,76px); gap:22px 30px; justify-content:center; margin-top:auto}
+.call-grid button{display:flex; flex-direction:column; align-items:center; gap:7px; font-size:12px}
+.call-grid span{width:76px; height:76px; border-radius:50%; background:rgba(255,255,255,.16); display:grid; place-items:center; backdrop-filter:blur(10px)}
+.call-grid svg{width:30px; height:30px; fill:#fff}
+.call-grid button.on span{background:#fff} .call-grid button.on svg{fill:#111}
+.endbtn{width:76px; height:76px; border-radius:50%; background:#ff3b30; display:grid; place-items:center; margin:34px auto 50px}
+.endbtn svg{width:34px; height:34px; fill:#fff; transform:rotate(135deg)}
+.call-kp{display:none; grid-template-columns:repeat(3,70px); gap:12px 24px; justify-content:center; margin-top:auto}
+.call-kp button{width:70px; height:70px; border-radius:50%; background:rgba(255,255,255,.16); font-size:28px}
+.view.call.kpon .call-grid{display:none} .view.call.kpon .call-kp{display:grid}
+.ig-top .back{display:flex; align-items:center; gap:2px; color:#2f7cf6; font-size:17px; padding:8px 4px; flex:none}
+.ig-top .back svg{width:12px; height:20px}
+.ig-top .ig-logo{margin-left:10px; cursor:pointer}
+
+@media (prefers-reduced-motion: reduce){ *,*::before,*::after{transition-duration:.01ms !important; animation-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="wall">
+    <div class="stars"></div>
+    <svg class="glad" viewBox="0 0 70 150" fill="none" stroke="#f4eee0" stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+      <path d="M35 150 C35 110 33 70 38 10"/>
+      <path d="M36 118 C26 112 20 102 22 94"/><path d="M36 100 C46 96 52 86 50 78"/>
+      <ellipse cx="31" cy="64" rx="9" ry="6" transform="rotate(-25 31 64)"/><ellipse cx="45" cy="52" rx="9" ry="6" transform="rotate(25 45 52)"/>
+      <ellipse cx="32" cy="40" rx="8" ry="5.5" transform="rotate(-25 32 40)"/><ellipse cx="44" cy="29" rx="7" ry="5" transform="rotate(25 44 29)"/>
+      <ellipse cx="36" cy="18" rx="5" ry="4"/>
+    </svg>
+    <div class="spines" id="spines"></div>
+    <div class="home-dim"></div>
+  </div>
+
+  <div class="status">
+    <span id="sbTime">9:41</span>
+    <span class="icons" aria-hidden="true">
+      <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="6" rx="1"/><rect x="10" y="2.5" width="3" height="8.5" rx="1"/><rect x="15" y="0" width="3" height="11" rx="1"/></svg>
+      <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 2.2c2.3 0 4.4.9 6 2.4l1.2-1.3A10.4 10.4 0 0 0 8 .4C5.2.4 2.7 1.5.8 3.3L2 4.6a8.6 8.6 0 0 1 6-2.4Zm0 3.4c1.4 0 2.6.5 3.6 1.4l1.2-1.3A7 7 0 0 0 8 3.8a7 7 0 0 0-4.8 1.9L4.4 7c1-.9 2.2-1.4 3.6-1.4ZM8 9l1.9 2L8 11 6.1 11 8 9Z"/></svg>
+      <svg width="27" height="12" viewBox="0 0 27 12"><rect x=".5" y=".5" width="22" height="11" rx="3" fill="none" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="16" height="8" rx="1.8"/><rect x="24" y="4" width="2" height="4" rx="1" opacity=".45"/></svg>
+    </span>
+  </div>
+
+  <div class="home" id="home"></div>
+
+  <div class="lock" id="lock">
+    <div class="date" id="lockDate"></div>
+    <div class="clock" id="lockTime">9:41</div>
+    <div class="notif" id="lockNotif"></div>
+    <button class="open-hint" id="openHint">Tap to unlock</button>
+  </div>
+
+  <div class="pad" id="pad" role="dialog" aria-label="Passcode">
+    <h2>Enter Passcode</h2>
+    <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+    <div class="hint" id="hint"></div>
+    <div class="keys" id="keys"></div>
+    <button class="cancel" id="cancel">Cancel</button>
+  </div>
+
+  <div class="views" id="views"></div>
+  <div class="yt-host" id="ytHost"><div id="ytPlayer"></div></div>
+  <div class="sheet" id="sheet"><div class="sheet-card"></div></div>
+  <div class="toast" id="toast"></div>
+  <div class="lightbox" id="lightbox" role="dialog" aria-label="Photo"><button class="lb-close">Close</button><div class="lb-img"></div></div>
+  <div class="homebar"></div>
+  <button class="homebar-hit" id="homebar" aria-label="Home"></button>
+</div>
+
+<script>
+/* =====================================================================
+   EDIT YOUR STORY HERE (Jebat's phone)
+   Everything the reader sees comes from the data below.
+   ===================================================================== */
+
+/* HOW TO WRITE MESSAGES
+   { "d": "Saturday 2:14 PM" }                 a day divider
+   { "f": "nuha", "t": "hello" }                 a text message from nuha
+   { "f": "nuha", "img": "pics/medal.jpg" }      a picture message
+   { "f": "nuha", "img": "pics/a.jpg", "t": "!" } a picture with text under it
+   { "f": "jebat", "t": "ok", "s": "Read" }      small status under a message ("Read" or "Delivered")
+
+   HOW TO ADD YOUR OWN PICTURES
+   1. Upload the picture into this same GitHub repository
+      (put it in a folder called pics to keep things tidy).
+   2. Write its path in quotes, e.g. "pics/raya.jpg".
+      Spelling and capital letters must match exactly: Raya.JPG is not raya.jpg.
+   3. If a picture can't be found, the phone shows the colour block instead.
+
+   Places you can use a picture:
+   - WALLPAPER below                 lock and home screen background
+   - "pic" on any person in PEOPLE   their profile picture
+   - "pic" on a group chat           the group's picture
+   - "img" in a message              a picture sent in chat
+   - "img" in PHOTOS                 a photo in Galeri
+   - "img" in NOTES                  a picture at the bottom of a note
+*/
+
+const OWNER = "jebat";
+const PASSCODE = "0163";
+const PASSCODE_HINT = "Hint: the night Bayu wrote about me.";
+const STORY_DATE = "Wednesday, November 11";
+const WALLPAPER = "";   // e.g. "pics/wallpaper.jpg"  (leave empty for the book-spine wallpaper)
+
+const PEOPLE = {
+  anggun: {"name": "Anggun", "color": "#6B3A7D", "ink": "#fff", "book": "Kundang", "pic": ""},
+  jebat: {"name": "Jebat", "color": "#C9A13B", "ink": "#1b1405", "book": "Kencana", "pic": ""},
+  harun: {"name": "Harun", "color": "#24306E", "ink": "#fff", "book": "Nilakandi", "pic": ""},
+  nuha: {"name": "Nuha", "color": "#B3262E", "ink": "#fff", "book": "Kirmizi", "pic": ""},
+  atul: {"name": "Atul", "color": "#8C97D4", "ink": "#11142e", "book": "Lembayung", "pic": ""},
+  bulan: {"name": "Bulan", "color": "#23212C", "ink": "#fff", "book": "Langking", "pic": ""},
+  mak: {"name": "Mak", "color": "#8f8a96", "ink": "#fff", "pic": ""},
+};
+
+const HOME_QUOTE = {"text": "Pandangan siapakah yang sebenarnya kita kejarkan?", "src": "Seri Bayu"};
+
+const CHATS = [
+  {
+    id: "pustaka", name: "Anak Pustaka 🍃", group: true, members: ["anggun", "jebat", "harun", "nuha", "atul", "bulan"],
+    messages: [
+      {"d": "Saturday 2:14 PM"},
+      {"f": "nuha", "t": "guys."},
+      {"f": "nuha", "t": "GUYS."},
+      {"f": "nuha", "t": "coach call aku tadi. dia nak aku masuk skuad negeri 🏃‍♀️"},
+      {"f": "bulan", "t": "KAK NUHAAAA"},
+      {"f": "bulan", "t": "tahniah!!! 🎉🎉🎉"},
+      {"f": "anggun", "t": "Alhamdulillah. Mak ayah Nuha dah tahu?"},
+      {"f": "nuha", "t": "...belum"},
+      {"f": "nuha", "t": "tapi kali ni aku tak minta izin. aku bagitahu je."},
+      {"f": "harun", "t": "bangga dengan kau"},
+      {"f": "jebat", "t": "Proud of you. Dinner Sabtu ni, aku belanja."},
+      {"f": "nuha", "t": "kau ni memang tak reti cakap melayu penuh eh bat"},
+      {"f": "jebat", "t": "Saya fasih. Saya cuma memilih."},
+      {"f": "bulan", "t": "abang jebat belanja!! nak sate ikan"},
+      {"f": "anggun", "t": "Bulan."},
+      {"f": "bulan", "t": "hehe ok bukan sate ikan"},
+      {"f": "atul", "t": "🍃"},
+      {"f": "harun", "t": "atul setuju tu"},
+      {"f": "atul", "t": "setuju."},
+      {"d": "Sunday 9:02 PM"},
+      {"f": "anggun", "t": "Kelas mengaji habis pukul 9. Saya datang terus lepas tu."},
+      {"f": "harun", "t": "aku habis shift 8. boleh ambik bulan"},
+      {"f": "bulan", "t": "abang harun naik motor ke 😭 tudung aku nanti"},
+      {"f": "harun", "t": "kereta. dah beli kereta"},
+      {"f": "nuha", "t": "WHAT"},
+      {"f": "jebat", "t": "Finally."},
+      {"f": "harun", "t": "second hand. tapi aku punya."},
+      {"f": "anggun", "t": "🤍"},
+      {"d": "Yesterday 1:47 AM"},
+      {"f": "bulan", "t": "kak atul"},
+      {"f": "bulan", "t": "aku mimpi pustaka tu lagi"},
+      {"f": "atul", "t": "aku pun."},
+      {"f": "jebat", "t": "Same."},
+      {"f": "anggun", "t": "Kadang saya rasa dia masih dengar kita."},
+      {"f": "harun", "t": "dia dengar."},
+      {"f": "nuha", "t": "ok jangan buat aku nangis sebelum training esok"},
+      {"f": "jebat", "t": "Sabtu. Pukul 8. Jangan lambat."},
+    ]
+  },
+  {
+    id: "dm-harun", name: "Harun", with: "harun",
+    messages: [
+      {"d": "Sunday 10:31 PM"},
+      {"f": "harun", "t": "bat."},
+      {"f": "harun", "t": "pasal duit deposit kereta tu. aku bayar balik."},
+      {"f": "jebat", "t": "Tak payah."},
+      {"f": "harun", "t": "aku bayar balik."},
+      {"f": "jebat", "t": "...Ok."},
+      {"f": "harun", "t": "terima kasih"},
+      {"f": "jebat", "t": "Jangan bagitahu Nuha. Nanti dia nak juga.", "s": "Read"},
+    ]
+  },
+  {
+    id: "mak", name: "Mak", with: "mak",
+    messages: [
+      {"d": "Mar 20"},
+      {"f": "jebat", "t": "Selamat Hari Raya, Mak. Maaf zahir batin."},
+      {"d": "Aug 14"},
+      {"f": "jebat", "t": "Mak, saya dah pindah rumah baru. Kalau Mak nak datang, saya hantar alamat."},
+      {"d": "Yesterday"},
+      {"f": "jebat", "t": "Mak sihat?", "s": "Delivered"},
+    ]
+  }
+];
+
+const NOTES = [
+  {"title": "Malam ke-163", "when": "Yesterday 2:05 AM", "body": "Kadang aku masih teringat buku emas tu. Kosong.\n\nDulu aku ingat kosong sebab tak ada apa-apa dalam hidup aku untuk ditulis.\n\nSekarang aku faham. Kosong sebab aku yang kena tulis."},
+  {"title": "Dinner Sabtu", "when": "Saturday", "body": "Tempah meja untuk 6.\nTanya Anggun okay ke kedai tu.\nBulan bukan sate ikan (dia kata).\nHadiah untuk Nuha: kasut lari baru.\nAtul tak suka tempat bising. Cari bilik belakang."},
+  {"title": "Draf (tak hantar)", "when": "Aug 14", "body": "Mak,\n\nSaya dah tak tunggu Mak lagi. Tapi pintu rumah ni masih terbuka."},
+];
+
+// Add  "img": "https://..."  to any photo to show a real picture instead of a colour block
+const PHOTOS = [
+  {"cap": "Skuad negeri. Dia menang.", "who": "nuha", "when": "Saturday"},
+  {"cap": "Kereta Harun. Second hand, tapi dia punya.", "who": "harun", "when": "Sunday"},
+  {"cap": "Budak-budak kelas mengaji Anggun.", "who": "anggun", "when": "October"},
+  {"cap": "Atul senyum. Jarang.", "who": "atul", "when": "September"},
+  {"cap": "Bulan habis SPM!", "who": "bulan", "when": "July"},
+  {"cap": "Pondok tu. Masih ada.", "who": "jebat", "when": "June"},
+];
+
+const EVENTS = [
+  {"when": "Saturday, Nov 14 • 8:00 PM", "title": "Dinner Anak Pustaka", "who": "jebat"},
+  {"when": "Sunday, Nov 15 • 7:00 AM", "title": "Hantar Nuha ke stadium", "who": "nuha"},
+  {"when": "Monday, Nov 16", "title": "Bulan daftar matrik", "who": "bulan"},
+];
+
+const LOCK_NOTIF = {"chat": "dm-harun", "from": "harun", "text": "terima kasih", "when": "Sunday"};
+
+/* ---------- INSTAGRAM ----------
+   Shared by all six phones. "by" = who posted, "likes" = who liked it
+   (if this phone's owner is in the list, the heart starts red),
+   "extra" = how many other people liked it, "img" = a picture path.  */
+/* ---------- PHONE APP ----------
+   favorites = people on the Favorites tab
+   recents   = call history, newest first. type: "in", "out" or "missed"
+   voicemails: "text" is what the caller says (shown as a transcript).
+   Add "audio": "pics/voicemail.mp3" to play a real recording. */
+const CALLS = {
+ "favorites": [
+  "harun",
+  "anggun",
+  "bulan"
+ ],
+ "recents": [
+  {
+   "who": "nuha",
+   "type": "missed",
+   "when": "9:12 PM"
+  },
+  {
+   "who": "mak",
+   "type": "out",
+   "when": "Yesterday",
+   "count": 3
+  },
+  {
+   "who": "harun",
+   "type": "in",
+   "when": "Sunday"
+  },
+  {
+   "who": "bulan",
+   "type": "in",
+   "when": "Saturday"
+  },
+  {
+   "who": "mak",
+   "type": "out",
+   "when": "Aug 14"
+  }
+ ],
+ "voicemails": [
+  {
+   "who": "nuha",
+   "when": "9:12 PM",
+   "dur": "0:11",
+   "text": "Bat. Kau tak angkat. Aku nak cakap terima kasih. Itu je. Jangan buat muka."
+  }
+ ]
+};
+
+const INSTA_NAME = "Instagram";
+const INSTA = {
+ "users": {
+  "anggun": {
+   "handle": "anggun.omar",
+   "name": "Anggun",
+   "bio": "Guru mengaji 🌙\nKelas dewasa: Isnin & Rabu, lepas Isyak",
+   "followers": 1284,
+   "following": 211,
+   "highlights": [
+    {
+     "title": "Kelas",
+     "who": "anggun",
+     "frames": [
+      {
+       "text": "Hari pertama kelas dewasa.\nSemua orang mula dari alif."
+      },
+      {
+       "text": "30 orang murid 🤍"
+      }
+     ]
+    },
+    {
+     "title": "Masak",
+     "who": "anggun",
+     "frames": [
+      {
+       "text": "Rendang untuk kenduri.\nResipi arwah nenek."
+      }
+     ]
+    }
+   ]
+  },
+  "jebat": {
+   "handle": "jebat.fateh",
+   "name": "Jebat Fateh",
+   "bio": "Reading > talking.\nKL",
+   "followers": 3021,
+   "following": 87,
+   "highlights": [
+    {
+     "title": "Buku",
+     "who": "jebat",
+     "frames": [
+      {
+       "text": "Currently reading:\n3 buku serentak. Jangan tanya."
+      },
+      {
+       "text": "Anggun kata habiskan satu dulu."
+      }
+     ]
+    }
+   ]
+  },
+  "harun": {
+   "handle": "harun.nila",
+   "name": "Harun",
+   "bio": "Shift 8–4.\nKereta second hand tapi aku punya.",
+   "followers": 402,
+   "following": 156,
+   "highlights": [
+    {
+     "title": "Kereta",
+     "who": "harun",
+     "frames": [
+      {
+       "text": "Hari ambil kunci."
+      },
+      {
+       "text": "Bulan orang pertama naik.\nDia jerit sepanjang jalan."
+      }
+     ]
+    }
+   ]
+  },
+  "nuha": {
+   "handle": "nuha.lari",
+   "name": "Nuha 🏃‍♀️",
+   "bio": "Atlet | Skuad Negeri\nPerlawanan pertama: 5 Dis",
+   "followers": 5310,
+   "following": 342,
+   "highlights": [
+    {
+     "title": "Larian",
+     "who": "nuha",
+     "frames": [
+      {
+       "text": "5:30 pagi.\nTaman tasik."
+      },
+      {
+       "text": "Atul lagi laju.\nJangan bagitahu coach."
+      }
+     ]
+    },
+    {
+     "title": "Skuad",
+     "who": "nuha",
+     "frames": [
+      {
+       "text": "JERSI NEGERI!!!"
+      }
+     ]
+    }
+   ]
+  },
+  "atul": {
+   "handle": "lembayung.atul",
+   "name": "Atul",
+   "bio": "🍃",
+   "followers": 188,
+   "following": 9,
+   "highlights": [
+    {
+     "title": "Langit",
+     "who": "atul",
+     "frames": [
+      {
+       "text": "6:02 pagi."
+      },
+      {
+       "text": "6:47 petang."
+      }
+     ]
+    }
+   ]
+  },
+  "bulan": {
+   "handle": "bulan.satetok",
+   "name": "Bulan 🌙",
+   "bio": "Gerai Sate Ikan Tok 🐟 buka 6 pagi\nBakal budak matrik!",
+   "followers": 967,
+   "following": 480,
+   "highlights": [
+    {
+     "title": "Gerai",
+     "who": "bulan",
+     "frames": [
+      {
+       "text": "Sate ikan RM1 secucuk 🐟"
+      },
+      {
+       "text": "Tok kata senyum sikit\nbaru orang beli."
+      }
+     ]
+    },
+    {
+     "title": "Matrik",
+     "who": "bulan",
+     "frames": [
+      {
+       "text": "DAPAT!!! 😭"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "stories": {
+  "nuha": [
+   {
+    "text": "5:30 pagi.\nTraining hari pertama 🏃‍♀️",
+    "time": "3h"
+   },
+   {
+    "text": "Kaki aku dah tak wujud.",
+    "time": "1h"
+   }
+  ],
+  "bulan": [
+   {
+    "text": "Gerai dah buka! 🐟",
+    "time": "4h"
+   },
+   {
+    "text": "Abang Jebat betul-betul order 50 cucuk 😭",
+    "time": "2h"
+   }
+  ],
+  "jebat": [
+   {
+    "text": "Sabtu. 8 malam.\nJangan lambat.",
+    "time": "5h"
+   }
+  ],
+  "atul": [
+   {
+    "text": "lembayung.",
+    "time": "12h"
+   }
+  ],
+  "anggun": [
+   {
+    "text": "Kelas dewasa minggu ni:\nIsnin & Rabu lepas Isyak.",
+    "time": "6h"
+   }
+  ],
+  "harun": [
+   {
+    "text": "Shift habis.\nAmbil Bulan Sabtu ni.",
+    "time": "8h"
+   }
+  ]
+ },
+ "posts": [
+  {
+   "id": "p1",
+   "by": "nuha",
+   "caption": "SKUAD NEGERI. 12 tahun aku tunggu benda ni. Terima kasih @jebat.fateh sebab percaya dulu masa semua orang tak percaya.",
+   "place": "Stadium Bukit Jalil",
+   "time": "4 days ago",
+   "likes": [
+    "bulan",
+    "harun",
+    "jebat",
+    "anggun",
+    "atul"
+   ],
+   "extra": 842,
+   "comments": [
+    {
+     "by": "bulan",
+     "t": "KAK NUHAAAA 😭😭",
+     "time": "4d",
+     "likes": 12
+    },
+    {
+     "by": "harun",
+     "t": "bangga dengan kau",
+     "time": "4d",
+     "likes": 5
+    },
+    {
+     "by": "jebat",
+     "t": "Told you.",
+     "time": "4d",
+     "likes": 9
+    },
+    {
+     "by": "nuha",
+     "t": "@jebat.fateh kau tak pernah cakap pun 🙄",
+     "time": "4d",
+     "likes": 3
+    },
+    {
+     "by": "anggun",
+     "t": "Alhamdulillah. Bangga dengan Nuha 🤍",
+     "time": "4d",
+     "likes": 6
+    },
+    {
+     "by": "atul",
+     "t": "🍃",
+     "time": "3d",
+     "likes": 4
+    }
+   ]
+  },
+  {
+   "id": "p2",
+   "by": "bulan",
+   "caption": "Gerai Tok buka 6 pagi! Sate ikan RM1 secucuk 🐟 Datang awal sebelum habis.",
+   "place": "Gerai Tok",
+   "time": "2 days ago",
+   "likes": [
+    "anggun",
+    "jebat",
+    "atul"
+   ],
+   "extra": 120,
+   "comments": [
+    {
+     "by": "anggun",
+     "t": "Kirim salam Tok.",
+     "time": "2d",
+     "likes": 2
+    },
+    {
+     "by": "jebat",
+     "t": "I'll take 50.",
+     "time": "2d",
+     "likes": 14
+    },
+    {
+     "by": "bulan",
+     "t": "@jebat.fateh abang serius ke 😭",
+     "time": "2d"
+    },
+    {
+     "by": "jebat",
+     "t": "Serius. Lunch ofis.",
+     "time": "2d",
+     "likes": 8
+    },
+    {
+     "by": "nuha",
+     "t": "jebat beli 50 aku nak 10",
+     "time": "1d",
+     "likes": 4
+    }
+   ]
+  },
+  {
+   "id": "p3",
+   "by": "harun",
+   "caption": "aku punya.",
+   "time": "3 days ago",
+   "likes": [
+    "nuha",
+    "jebat",
+    "bulan",
+    "anggun"
+   ],
+   "extra": 61,
+   "comments": [
+    {
+     "by": "nuha",
+     "t": "WHAT",
+     "time": "3d",
+     "likes": 3
+    },
+    {
+     "by": "jebat",
+     "t": "Finally.",
+     "time": "3d",
+     "likes": 5
+    },
+    {
+     "by": "bulan",
+     "t": "abang harun bila nak bawa aku jalan2",
+     "time": "3d"
+    },
+    {
+     "by": "harun",
+     "t": "@bulan.satetok sabtu ni",
+     "time": "3d",
+     "likes": 2
+    },
+    {
+     "by": "anggun",
+     "t": "Hati-hati bawa kereta, Harun.",
+     "time": "2d",
+     "likes": 1
+    }
+   ]
+  },
+  {
+   "id": "p4",
+   "by": "anggun",
+   "caption": "30 orang anak murid. Setiap huruf ada ceritanya.",
+   "place": "Rumah Ustazah",
+   "time": "5 days ago",
+   "likes": [
+    "bulan",
+    "harun",
+    "atul",
+    "jebat"
+   ],
+   "extra": 230,
+   "comments": [
+    {
+     "by": "bulan",
+     "t": "kak anggun cikgu terbaik 🥹",
+     "time": "5d",
+     "likes": 3
+    },
+    {
+     "by": "harun",
+     "t": "🤍",
+     "time": "5d"
+    },
+    {
+     "by": "jebat",
+     "t": "Proud of you, Anggun.",
+     "time": "5d",
+     "likes": 2
+    }
+   ]
+  },
+  {
+   "id": "p5",
+   "by": "atul",
+   "caption": "lembayung.",
+   "time": "1 week ago",
+   "likes": [
+    "nuha",
+    "bulan",
+    "anggun"
+   ],
+   "extra": 41,
+   "comments": [
+    {
+     "by": "nuha",
+     "t": "cantik gila",
+     "time": "1w"
+    },
+    {
+     "by": "bulan",
+     "t": "kak atul ambik guna kamera apa",
+     "time": "1w"
+    },
+    {
+     "by": "atul",
+     "t": "@bulan.satetok telefon je.",
+     "time": "1w",
+     "likes": 2
+    }
+   ]
+  },
+  {
+   "id": "p6",
+   "by": "jebat",
+   "caption": "Currently reading. Don't ask how many.",
+   "time": "1 week ago",
+   "likes": [
+    "anggun",
+    "harun"
+   ],
+   "extra": 310,
+   "comments": [
+    {
+     "by": "anggun",
+     "t": "Habiskan dulu yang bulan lepas.",
+     "time": "1w",
+     "likes": 7
+    },
+    {
+     "by": "jebat",
+     "t": "...noted.",
+     "time": "1w",
+     "likes": 4
+    },
+    {
+     "by": "bulan",
+     "t": "abang pinjam satu",
+     "time": "1w"
+    }
+   ]
+  },
+  {
+   "id": "p7",
+   "by": "nuha",
+   "caption": "Partner lari pagi @lembayung.atul. Dia lagi laju dari aku. Jangan bagitahu coach.",
+   "place": "Taman Tasik",
+   "time": "1 week ago",
+   "likes": [
+    "atul",
+    "harun",
+    "bulan"
+   ],
+   "extra": 412,
+   "tagged": [
+    "atul"
+   ],
+   "comments": [
+    {
+     "by": "atul",
+     "t": "🤫",
+     "time": "1w",
+     "likes": 6
+    },
+    {
+     "by": "harun",
+     "t": "atul memang laju dari dulu",
+     "time": "1w",
+     "likes": 2
+    }
+   ]
+  },
+  {
+   "id": "p8",
+   "by": "bulan",
+   "caption": "Alhamdulillah. Tok, Bulan dapat matrik 🌙",
+   "time": "2 weeks ago",
+   "likes": [
+    "anggun",
+    "jebat",
+    "harun",
+    "nuha",
+    "atul"
+   ],
+   "extra": 286,
+   "comments": [
+    {
+     "by": "anggun",
+     "t": "Alhamdulillah, Bulan! Kakak tolong beli barang.",
+     "time": "2w",
+     "likes": 4
+    },
+    {
+     "by": "nuha",
+     "t": "BUDAK KECIK KITA DAH BESAR",
+     "time": "2w",
+     "likes": 9
+    },
+    {
+     "by": "harun",
+     "t": "aku hantar nanti",
+     "time": "2w",
+     "likes": 2
+    },
+    {
+     "by": "jebat",
+     "t": "Kalkulator lama aku kau ambil.",
+     "time": "2w",
+     "likes": 5
+    },
+    {
+     "by": "atul",
+     "t": "tahniah bulan.",
+     "time": "2w",
+     "likes": 3
+    }
+   ]
+  },
+  {
+   "id": "p9",
+   "by": "harun",
+   "caption": "Shift malam habis. Bayar hutang dulu, baru beli kopi.",
+   "time": "2 weeks ago",
+   "likes": [
+    "jebat",
+    "anggun"
+   ],
+   "extra": 33,
+   "comments": [
+    {
+     "by": "jebat",
+     "t": "Tak payah.",
+     "time": "2w",
+     "likes": 3
+    },
+    {
+     "by": "harun",
+     "t": "@jebat.fateh bayar.",
+     "time": "2w",
+     "likes": 6
+    }
+   ]
+  },
+  {
+   "id": "p10",
+   "by": "anggun",
+   "caption": "Masak untuk kenduri. Rendang ikut resipi arwah nenek.",
+   "time": "3 weeks ago",
+   "likes": [
+    "nuha",
+    "bulan",
+    "harun"
+   ],
+   "extra": 154,
+   "comments": [
+    {
+     "by": "nuha",
+     "t": "jemput tak aku",
+     "time": "3w",
+     "likes": 1
+    },
+    {
+     "by": "anggun",
+     "t": "@nuha.lari Nuha datang je.",
+     "time": "3w",
+     "likes": 2
+    },
+    {
+     "by": "bulan",
+     "t": "simpan sikit untuk aku kak",
+     "time": "3w"
+    }
+   ]
+  },
+  {
+   "id": "p11",
+   "by": "atul",
+   "caption": "5k.",
+   "time": "3 weeks ago",
+   "likes": [
+    "nuha"
+   ],
+   "extra": 22,
+   "comments": [
+    {
+     "by": "nuha",
+     "t": "esok lagi 💪",
+     "time": "3w",
+     "likes": 1
+    }
+   ]
+  },
+  {
+   "id": "p12",
+   "by": "jebat",
+   "caption": "Some places stay.",
+   "time": "1 month ago",
+   "likes": [
+    "atul",
+    "harun",
+    "anggun",
+    "bulan",
+    "nuha"
+   ],
+   "extra": 502,
+   "comments": [
+    {
+     "by": "atul",
+     "t": "🍃",
+     "time": "4w",
+     "likes": 5
+    },
+    {
+     "by": "harun",
+     "t": "aku ingat lagi jalan dia",
+     "time": "4w",
+     "likes": 7
+    },
+    {
+     "by": "anggun",
+     "t": "Dia masih dengar.",
+     "time": "4w",
+     "likes": 11
+    }
+   ]
+  }
+ ],
+ "dms": [
+  {
+   "between": [
+    "bulan",
+    "jebat"
+   ],
+   "messages": [
+    {
+     "d": "2 days ago"
+    },
+    {
+     "f": "bulan",
+     "t": "abang betul ke 50 cucuk"
+    },
+    {
+     "f": "jebat",
+     "t": "Yes. Lunch ofis."
+    },
+    {
+     "f": "bulan",
+     "t": "😭😭 terima kasih abang"
+    },
+    {
+     "f": "bulan",
+     "t": "tok kirim salam"
+    },
+    {
+     "f": "jebat",
+     "t": "Waalaikumussalam. Kirim salam Tok balik."
+    }
+   ]
+  },
+  {
+   "between": [
+    "harun",
+    "nuha"
+   ],
+   "messages": [
+    {
+     "d": "3 days ago"
+    },
+    {
+     "f": "nuha",
+     "t": "kereta warna apa"
+    },
+    {
+     "f": "harun",
+     "t": "kelabu"
+    },
+    {
+     "f": "nuha",
+     "t": "boring"
+    },
+    {
+     "f": "harun",
+     "t": "tapi aku punya"
+    },
+    {
+     "f": "nuha",
+     "t": "ok fair 😭"
+    }
+   ]
+  },
+  {
+   "between": [
+    "anggun",
+    "atul"
+   ],
+   "messages": [
+    {
+     "d": "1 week ago"
+    },
+    {
+     "f": "anggun",
+     "t": "Cantik langit tu, Atul."
+    },
+    {
+     "f": "atul",
+     "t": "terima kasih kak."
+    },
+    {
+     "f": "anggun",
+     "t": "Nanti ajar kakak ambil gambar macam tu."
+    },
+    {
+     "f": "atul",
+     "t": "🍃"
+    }
+   ]
+  },
+  {
+   "between": [
+    "nuha",
+    "atul"
+   ],
+   "messages": [
+    {
+     "d": "Yesterday"
+    },
+    {
+     "f": "nuha",
+     "t": "aku tag kau tau"
+    },
+    {
+     "f": "atul",
+     "t": "nampak."
+    },
+    {
+     "f": "atul",
+     "t": "🤫"
+    }
+   ]
+  }
+ ]
+};
+
+/* ---------- MUZIK ----------
+   Paste a YouTube link into "youtube" for each song, e.g.
+   {"title": "Song title", "artist": "Artist", "youtube": "https://youtu.be/xxxxxxxxxxx"},
+   "channel" = link to your YouTube channel (button in Muzik). */
+const MUSIC = {
+  playlist: "Late Night Reading",
+  note: "Jangan ganggu",
+  channel: "",          // e.g. "https://www.youtube.com/@pustakaseribayu"
+  channelName: "Pustaka Seri Bayu on YouTube",
+  songs: [
+    {"title": "Song 1", "artist": "Artist", "youtube": ""},
+    {"title": "Song 2", "artist": "Artist", "youtube": ""},
+    {"title": "Song 3", "artist": "Artist", "youtube": ""},
+    {"title": "Song 4", "artist": "Artist", "youtube": ""},
+  ]
+};
+
+/* ===================================================================== */
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const P = id => PEOPLE[id] || { name: id, color: "#999", ink: "#fff" };
+const phone = $("#phone");
+// a picture that quietly disappears if the file is missing, so the colour behind it shows instead
+const pic = (src, alt = "") => src ? `<img src="${esc(encodeURI(src))}" alt="${esc(alt)}" loading="lazy" onerror="this.remove()">` : "";
+
+function avatar(id, size){
+  const p = P(id);
+  const dark = p.color.toLowerCase() === "#23212c" ? " dark" : "";
+  return `<span class="av${dark}" style="width:${size}px;height:${size}px;background:${p.color};color:${p.ink};font-size:${Math.round(size*.42)}px">${esc(p.name[0])}${pic(p.pic)}</span>`;
+}
+function groupAvatar(c, small){
+  if (c.pic) return `<span class="av" style="width:${small?30:52}px;height:${small?30:52}px;background:var(--surface2)">${pic(c.pic)}</span>`;
+  return `<span class="gav${small?" sm":""}">${c.members.map(m => `<i style="background:${P(m).color}"></i>`).join("")}</span>`;
+}
+function chatAvatar(c, size){ return c.group ? groupAvatar(c, size < 40) : avatar(c.with, size); }
+
+// wallpaper
+const heights = [78, 88, 70, 84, 74, 80];
+$("#spines").innerHTML = ["anggun","jebat","harun","nuha","atul","bulan"]
+  .map((id,i) => id === OWNER
+    ? `<div class="spine" style="background:${P(id).color};height:100%;box-shadow:inset -6px 0 0 rgba(0,0,0,.18),0 0 22px ${P(id).color}"></div>`
+    : `<div class="spine" style="background:${P(id).color};height:${heights[i]}%"></div>`).join("");
+if (WALLPAPER) $(".wall").insertAdjacentHTML("afterbegin", `<span class="wall-img">${pic(WALLPAPER)}</span>`);
+
+// clock
+function tick(){
+  const d = new Date(); let h = d.getHours() % 12 || 12; const m = String(d.getMinutes()).padStart(2,"0");
+  $("#sbTime").textContent = `${h}:${m}`; $("#lockTime").textContent = `${h}:${m}`;
+}
+tick(); setInterval(tick, 15000);
+$("#lockDate").textContent = STORY_DATE;
+
+// lock notification
+(() => {
+  const c = CHATS.find(x => x.id === LOCK_NOTIF.chat);
+  $("#lockNotif").innerHTML = `<span class="ic" style="background:linear-gradient(#6ee36e,#2fbf3f);display:grid;place-items:center">${msgGlyph(20)}</span>
+    <div><b>${esc(c ? c.name : "")}</b><p>${c && c.group ? esc(P(LOCK_NOTIF.from).name) + ": " : ""}${esc(LOCK_NOTIF.text)}</p></div><span class="t">${esc(LOCK_NOTIF.when)}</span>`;
+})();
+
+/* ---------- navigation ----------
+   Screens stack up: lock > home > app > chat/note/photo.
+   The on-screen back button, the phone's own back button/gesture,
+   the browser back button and the Esc key all go back one screen. */
+const stack = [];
+let unlocked = false;
+const depth = () => (unlocked ? 1 : 0) + stack.length;
+function remember(){ try { history.pushState({ d: depth() }, ""); } catch (e) {} }
+function goBack(){ if (depth() === 0) return; try { history.back(); } catch (e) { stepBack(); } }
+window.addEventListener("popstate", e => {
+  const target = (e.state && e.state.d) || 0;
+  while (depth() > target) stepBack();
+});
+function stepBack(){
+  if (stack.length) return popView();
+  if (unlocked) lockPhone();
+}
+
+function unlockPhone(){
+  $("#pad").classList.remove("show"); $("#lock").classList.add("gone"); phone.classList.add("at-home");
+  unlocked = true; remember();
+}
+function lockPhone(){
+  unlocked = false; phone.classList.remove("at-home", "in-app");
+  $("#lock").classList.remove("gone"); $("#hint").textContent = ""; closeSheet(); syncChrome();
+}
+
+// passcode
+let entered = "";
+const letters = ["","ABC","DEF","GHI","JKL","MNO","PQRS","TUV","WXYZ"];
+$("#keys").innerHTML = [1,2,3,4,5,6,7,8,9].map(n => `<button class="key" data-k="${n}">${n}<small>${letters[n-1]}</small></button>`).join("")
+  + `<span></span><button class="key" data-k="0">0</button><button class="key del" data-k="del" aria-label="Delete">⌫</button>`;
+$("#keys").addEventListener("click", e => {
+  const k = e.target.closest(".key"); if (!k) return;
+  if (k.dataset.k === "del"){ entered = entered.slice(0,-1); paintDots(); return; }
+  if (entered.length >= 4) return;
+  entered += k.dataset.k; paintDots();
+  if (entered.length === 4) setTimeout(check, 120);
+});
+function paintDots(){ [...$("#dots").children].forEach((d,i) => d.classList.toggle("on", i < entered.length)); }
+function check(){
+  if (entered === PASSCODE){ entered = ""; paintDots(); unlockPhone(); }
+  else { const d = $("#dots"); d.classList.add("shake"); $("#hint").textContent = PASSCODE_HINT;
+    setTimeout(() => { d.classList.remove("shake"); entered=""; paintDots(); }, 420); }
+}
+const closePad = () => { $("#pad").classList.remove("show"); entered=""; paintDots(); };
+$("#openHint").onclick = () => $("#pad").classList.add("show");
+$("#lock").addEventListener("click", e => { if (!e.target.closest(".open-hint")) $("#pad").classList.add("show"); });
+$("#cancel").onclick = closePad;
+document.addEventListener("keydown", e => {
+  if ($("#pad").classList.contains("show")){
+    if (/^[0-9]$/.test(e.key) && entered.length < 4){ entered += e.key; paintDots(); if (entered.length===4) setTimeout(check,120); }
+    if (e.key === "Backspace"){ entered = entered.slice(0,-1); paintDots(); }
+    if (e.key === "Escape") closePad();
+    return;
+  }
+  if (e.key === "Escape" && $("#sheet").classList.contains("show")){ closeSheet(); return; }
+  if (e.key === "Escape" && !$("#lightbox").classList.contains("show")) goBack();
+});
+
+// icons
+function msgGlyph(s){ return `<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path fill="#fff" d="M12 3C6.5 3 2 6.7 2 11.2c0 2.6 1.5 4.9 3.9 6.4-.2 1.3-.9 2.6-2 3.4 2 0 3.8-.7 5-1.8 1 .3 2 .4 3.1.4 5.5 0 10-3.7 10-8.3S17.5 3 12 3Z"/></svg>`; }
+// the Instagram icon takes the colour of the phone owner's book
+function mixHex(a, b, t){ const p = h => [1,3,5].map(i => parseInt(h.slice(i, i + 2), 16)); const x = p(a), y = p(b);
+  return "#" + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, "0")).join(""); }
+const bookGradient = c => `linear-gradient(150deg, ${mixHex(c, "#ffffff", .28)}, ${c} 55%, ${mixHex(c, "#000000", .38)})`;
+const ICONS = {
+  mesej: { label:"Messages", bg:"linear-gradient(#6ee36e,#2fbf3f)", svg: msgGlyph(34) },
+  nota: { label:"Notes", bg:"#fff", svg:`<svg width="60" height="60" viewBox="0 0 60 60"><rect width="60" height="17" fill="#f8c93c"/><g stroke="#d6d6dc" stroke-width="1.2"><path d="M8 29h44M8 38h44M8 47h44"/></g></svg>` },
+  galeri: { label:"Photos", bg:"#fff", svg:`<svg width="44" height="44" viewBox="-22 -22 44 44">${["anggun","jebat","harun","nuha","atul","bulan"].map((id,i)=>`<ellipse cx="0" cy="-10" rx="6" ry="11" fill="${P(id).color}" opacity=".9" transform="rotate(${i*60})"/>`).join("")}</svg>` },
+  kalendar: { label:"Calendar", bg:"#fff", svg:`<div style="text-align:center;line-height:1"><div style="color:#e0443e;font-size:9px;font-weight:600">Wednesday</div><div style="color:#111;font-size:30px;font-weight:300;margin-top:2px">11</div></div>` },
+  telefon: { label:"Phone", bg:"linear-gradient(#6ee36e,#2fbf3f)", svg:`<svg width="30" height="30" viewBox="0 0 24 24"><path fill="#fff" d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2Z"/></svg>` },
+  kamera: { label:"Camera", bg:"linear-gradient(#d9d9de,#a5a5ad)", svg:`<svg width="34" height="34" viewBox="0 0 24 24"><path fill="#333" d="M9 4 7.2 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.2L15 4H9Z"/><circle cx="12" cy="13" r="4.2" fill="#d9d9de"/><circle cx="12" cy="13" r="2.6" fill="#333"/></svg>` },
+  lensa: { label: INSTA_NAME, bg: bookGradient(P(OWNER).color), svg:`<svg width="38" height="38" viewBox="0 0 38 38" fill="none" stroke="#fff" stroke-width="2.4"><circle cx="19" cy="19" r="12"/><path d="M22.5 12.5a7 7 0 1 0 3 9.5 5.5 5.5 0 1 1-3-9.5z" fill="#fff" stroke="none"/></svg>` },
+  muzik: { label:"Music", bg:"linear-gradient(#ff6b7d,#f2364f)", svg:`<svg width="30" height="30" viewBox="0 0 24 24"><path fill="#fff" d="M9 17.5V6l11-2v11.5a2.5 2.5 0 1 1-2-2.45V7.6l-7 1.3v8.6a2.5 2.5 0 1 1-2-2.45Z"/></svg>` }
+};
+function appBtn(key){
+  const a = ICONS[key];
+  return `<button class="app" data-app="${key}"><span class="ic" style="background:${a.bg}">${a.svg}</span><span>${a.label}</span></button>`;
+}
+$("#home").innerHTML = `<div class="grid">
+  <div class="widget"><div class="q">${esc(HOME_QUOTE.text)}</div><div class="src">${esc(HOME_QUOTE.src)}</div></div>
+  ${["galeri","nota","kalendar","lensa"].map(appBtn).join("")}
+</div>
+<div class="home-mini" data-mini hidden></div>
+<button class="lock-btn" id="lockBtn" aria-label="Lock phone"><svg width="13" height="16" viewBox="0 0 13 16"><rect x="1" y="7" width="11" height="8" rx="2" fill="currentColor"/><path d="M3.5 7V4.8a3 3 0 0 1 6 0V7" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Lock</button>
+<div class="dock">${["telefon","mesej","kamera","muzik"].map(appBtn).join("")}</div>`;
+$("#home").addEventListener("click", e => {
+  const b = e.target.closest(".app"); if (b) openApp(b.dataset.app);
+});
+$("#lockBtn").onclick = goBack;
+
+// toast
+let tt;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("show"),1600); }
+
+function push(html, opts = {}){
+  const v = document.createElement("section");
+  v.className = "view" + (opts.cls ? " " + opts.cls : "") + (stack.length ? "" : " from-home");
+  v.innerHTML = html; $("#views").appendChild(v);
+  if (stack.length) stack[stack.length-1].classList.add("under");
+  stack.push(v); phone.classList.toggle("in-app", !opts.darkStatus);
+  requestAnimationFrame(() => requestAnimationFrame(() => v.classList.add("in")));
+  v.querySelectorAll("[data-back]").forEach(b => b.onclick = goBack);
+  if (opts.after) opts.after(v);
+  remember(); syncChrome();
+  return v;
+}
+function popView(){
+  const v = stack.pop(); if (!v) return;
+  if (v._onClose) v._onClose();
+  v.classList.remove("in");
+  if (stack.length){ const top = stack[stack.length-1]; top.classList.remove("under"); phone.classList.toggle("in-app", !top.classList.contains("dark")); }
+  else phone.classList.remove("in-app");
+  syncChrome();
+  setTimeout(() => v.remove(), 340);
+}
+function goHome(){ if (stack.length){ try { history.go(-stack.length); } catch (e) { while (stack.length) popView(); } } }
+$("#homebar").onclick = goHome;
+
+const backBtn = label => `<button class="back" data-back aria-label="Back"><svg viewBox="0 0 12 20"><path d="M10 2 2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>${esc(label)}</button>`;
+const topNav = () => `<div class="nav">${backBtn("Home")}</div>`;
+
+function openApp(key){
+  if (!unlocked) return;
+  if (key === "mesej") return openMessages();
+  if (key === "nota") return openNotes();
+  if (key === "galeri") return openGallery();
+  if (key === "kalendar") return openCalendar();
+  if (key === "lensa") return openLensa();
+  if (key === "muzik") return openMusic();
+  if (key === "telefon") return openPhone();
+  toast("Nothing here yet.");
+}
+
+function lastText(c){
+  const m = [...c.messages].reverse().find(x => x.t || x.img); if (!m) return "";
+  return (c.group && m.f !== OWNER ? P(m.f).name + ": " : "") + (m.t || "📷 Photo");
+}
+function lastDay(c){ const m = [...c.messages].reverse().find(x => x.d); return m ? m.d.replace(/\s+\d{1,2}:\d{2}.*$/,"") : ""; }
+
+function openMessages(){
+  const rows = CHATS.map(c => `<button class="row-item" data-chat="${c.id}">${chatAvatar(c,52)}
+    <span class="body"><span class="top"><b>${esc(c.name)}</b><span class="tm">${esc(lastDay(c))}</span></span><p>${esc(lastText(c))}</p></span></button>`).join("");
+  push(`${topNav()}<div class="scroll"><div class="big-title">Messages</div>${rows}</div>`, {
+    after: v => v.querySelectorAll("[data-chat]").forEach(b => b.onclick = () => openChat(b.dataset.chat))
+  });
+}
+
+// full-screen picture viewer for pictures sent in chat
+function openLightbox(src){
+  const lb = $("#lightbox"); lb.querySelector(".lb-img").innerHTML = pic(src); lb.classList.add("show");
+}
+$("#lightbox").addEventListener("click", () => $("#lightbox").classList.remove("show"));
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("#lightbox").classList.remove("show"); });
+
+const EMOJI_ONLY = /^(\p{Extended_Pictographic}|\p{Emoji_Component}|\u200d|\ufe0f|\s)+$/u;
+function messagesHTML(c){
+  const me = P(OWNER); let html = ""; let prev = null;
+  c.messages.forEach((m,i) => {
+    if (m.d){ html += `<div class="day">${esc(m.d)}</div>`; prev = null; return; }
+    const mine = m.f === OWNER; const next = c.messages[i+1];
+    const last = !next || next.d || next.f !== m.f; const first = prev !== m.f;
+    html += `<div class="msg ${mine?"mine":"theirs"}${last?" last":""}${first?" gap":""}">`;
+    if (!mine && c.group) html += last ? avatar(m.f,28) : `<span class="sp"></span>`;
+    html += `<div class="bw">${!mine && c.group && first ? `<div class="who">${esc(P(m.f).name)}</div>` : ""}`;
+    if (m.img) html += `<button class="bubble pic" data-img="${esc(m.img)}" aria-label="Open photo">${pic(m.img)}<span class="missing">📷</span></button>`;
+    if (m.t){
+      const emoji = EMOJI_ONLY.test(m.t) && [...m.t].length <= 6;
+      const style = mine && !emoji ? `background:${me.color};color:${me.ink}` : "";
+      html += `<div class="bubble${emoji?" emoji":""}" style="${style}">${esc(m.t)}</div>`;
+    }
+    html += `</div></div>`;
+    if (m.s) html += `<div class="receipt">${esc(m.s)}</div>`;
+    prev = m.f;
+  });
+  return html;
+}
+function openChat(id){
+  const c = CHATS.find(x => x.id === id);
+  const sub = c.group ? `${c.members.length} people` : "";
+  push(`<div class="nav">${backBtn("Messages")}<div class="mid">${chatAvatar(c,c.group?30:34)}<span class="nm">${esc(c.name)}</span>${sub?`<span class="sub">${sub}</span>`:""}</div></div>
+    <div class="scroll"><div class="chat">${messagesHTML(c)}</div></div>
+    <div class="composer"><span class="plus">+</span><span class="field">iMessage</span></div>`, {
+    after: v => {
+      const s = v.querySelector(".scroll"); requestAnimationFrame(() => s.scrollTop = s.scrollHeight);
+    }
+  });
+}
+// pictures in any chat open full screen
+phone.addEventListener("click", e => { const b = e.target.closest("[data-img]"); if (b) openLightbox(b.dataset.img); });
+
+function openNotes(){
+  const rows = NOTES.map((n,i) => `<button class="note-row" data-n="${i}"><b>${esc(n.title)}</b><span>${esc(n.when)}  ${esc(n.body.split("\n").find(l=>l.trim()&&l!==n.title)||"")}</span></button>`).join("");
+  push(`${topNav()}<div class="scroll"><div class="big-title">Notes</div><div class="group">${rows}</div></div>`, {
+    cls: "notes",
+    after: v => v.querySelectorAll("[data-n]").forEach(b => b.onclick = () => {
+      const n = NOTES[b.dataset.n];
+      push(`<div class="nav">${backBtn("Notes")}</div><div class="scroll" style="background:var(--note)"><div class="note-body"><div class="when">${esc(n.when)}</div><h1>${esc(n.title)}</h1><p>${esc(n.body)}</p>${n.img ? `<div class="note-img">${pic(n.img)}</div>` : ""}</div></div>`);
+    })
+  });
+}
+
+function photoFill(p){
+  const c = P(p.who).color;
+  return `background:radial-gradient(circle at 30% 25%, rgba(255,255,255,.35), transparent 55%), linear-gradient(160deg, ${c}, #1a1424)`;
+}
+function photoFill(p){
+  const c = P(p.who).color;
+  return `background:radial-gradient(circle at 30% 25%, rgba(255,255,255,.35), transparent 55%), linear-gradient(160deg, ${c}, #1a1424)`;
+}
+function openCalendar(){
+  const days = [["Sun",8],["Mon",9],["Tue",10],["Wed",11],["Thu",12],["Fri",13],["Sat",14]];
+  const week = days.map(([n,d]) => `<div><div class="dn">${n}</div><div class="dd${d===11?" today":""}">${d}</div></div>`).join("");
+  const evs = EVENTS.map(e => `<div class="ev"><span class="bar" style="background:${P(e.who).color}"></span><div><div class="w">${esc(e.when)}</div><b>${esc(e.title)}</b></div></div>`).join("");
+  push(`${topNav()}<div class="scroll"><div class="big-title">Calendar</div><div class="cal-head">November 2026</div><div class="week">${week}</div>${evs}</div>`);
+}
+
+/* ===================== saved progress (per reader, per phone) ===================== */
+const store = (() => {
+  const key = "psb-" + OWNER;
+  let s = {};
+  try { s = JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch (e) {}
+  const save = () => { try { localStorage.setItem(key, JSON.stringify(s)); } catch (e) {} };
+  return {
+    get: (k, d) => (s[k] !== undefined ? s[k] : d),
+    set: (k, v) => { s[k] = v; save(); },
+    reset: () => { s = {}; try { localStorage.removeItem(key); } catch (e) {} }
+  };
+})();
+
+/* ===================== icons ===================== */
+const IC = {
+  heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1 7.8 7.8 7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',
+  comment: '<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/>',
+  send: '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/>',
+  bookmark: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+  home: '<path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z"/>',
+  search: '<circle cx="11" cy="11" r="7.5"/><path d="M21 21l-4.6-4.6"/>',
+  plus: '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/>',
+  more: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
+  menu: '<path d="M3 6h18M3 12h18M3 18h18"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  grid: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>',
+  tag: '<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7" cy="7" r="1.2"/>',
+  info: '<circle cx="12" cy="12" r="9.5"/><path d="M12 16v-4.5M12 8h.01"/>',
+  play: '<path d="M7 4.5v15l13-7.5z"/>',
+  pause: '<rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/>',
+  next: '<path d="M4 5v14l10-7zM14 5v14l8-7z"/>',
+  prev: '<path d="M20 5v14l-10-7zM10 5v14L2 12z"/>',
+  shuffle: '<path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>'
+};
+const ic = n => `<svg viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
+const fmt = n => Number(n).toLocaleString("en-US");
+
+/* ===================== bottom sheet ===================== */
+function sheet(html){ const s = $("#sheet"); s.querySelector(".sheet-card").innerHTML = html; s.classList.add("show"); return s.querySelector(".sheet-card"); }
+function closeSheet(){ $("#sheet").classList.remove("show"); }
+$("#sheet").addEventListener("click", e => { if (e.target.id === "sheet" || e.target.closest("[data-close]")) closeSheet(); });
+const topView = () => stack[stack.length - 1];
+function copyLink(msg){
+  const url = location.href.split("#")[0];
+  try { navigator.clipboard.writeText(url).then(() => toast(msg), () => toast(msg)); } catch (e) { toast(msg); }
+}
+function friendsSheet(title, onSend){
+  const card = sheet(`<div class="sh-title">${esc(title)}</div>${IG_KEYS.filter(k => k !== OWNER).map(k =>
+    `<div class="urow"><span class="uinfo">${avatar(k,40)}<span><b>${esc(P(k).name)}</b><small>@${esc(IGU(k).handle)}</small></span></span><button class="fbtn" data-send="${k}">Send</button></div>`).join("")}
+    <button class="sh-cancel" data-close>Done</button>`);
+  card.querySelectorAll("[data-send]").forEach(b => b.onclick = () => {
+    onSend(b.dataset.send); b.textContent = "Sent"; b.disabled = true; b.classList.add("ghost");
+  });
+}
+
+/* ===================== GALERI ===================== */
+function openGallery(){
+  push(`${topNav()}<div class="scroll"><div class="big-title">Photos</div>
+    <div class="seg"><button class="on" data-act="galtab" data-id="all">All Photos</button><button data-act="galtab" data-id="fav">Favorites</button></div>
+    <div class="photos gal-grid"></div></div>`, { after: v => { v._tab = "all"; renderGal(v); } });
+}
+function renderGal(v){
+  const favs = store.get("fav", {});
+  const list = PHOTOS.map((p,i) => ({ p, i })).filter(x => v._tab === "all" || favs[x.i]);
+  v.querySelectorAll(".seg button").forEach(b => b.classList.toggle("on", b.dataset.id === v._tab));
+  v.querySelector(".gal-grid").innerHTML = list.length
+    ? list.map(x => `<button class="ph" data-act="photo" data-id="${x.i}" style="${photoFill(x.p)}" aria-label="${esc(x.p.cap)}">${pic(x.p.img, x.p.cap)}${favs[x.i] ? '<span class="fav-dot">♥</span>' : ""}</button>`).join("")
+    : `<p class="empty" style="grid-column:1/-1">${v._tab === "fav" ? "Tap ♥ on a photo to add it to Favorites." : "No photos yet."}</p>`;
+}
+function openPhoto(i){
+  push(`<div class="nav">${backBtn("Photos")}<div class="mid"><span class="nm pv-count" style="color:#fff"></span></div></div>
+    <div class="viewer"><div class="pv-stage"><div class="img pv-img"></div>
+      <button class="pv-arrow l" data-act="pvstep" data-id="-1" aria-label="Previous">‹</button><button class="pv-arrow r" data-act="pvstep" data-id="1" aria-label="Next">›</button></div>
+      <div class="cap pv-cap"></div>
+      <div class="pv-bar"><button class="ib" data-act="pvshare" aria-label="Share">${ic("send")}</button><button class="ib pv-fav" data-act="pvfav" aria-label="Favorite">${ic("heart")}</button><button class="ib" data-act="pvinfo" aria-label="Info">${ic("info")}</button></div></div>`,
+    { cls: "dark", darkStatus: true, after: v => {
+      v._i = i; showPhoto(v);
+      let x0 = null; const st = v.querySelector(".pv-stage");
+      st.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
+      st.addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 45) stepPhoto(v, dx < 0 ? 1 : -1); x0 = null; });
+    }});
+}
+function showPhoto(v){
+  const p = PHOTOS[v._i]; const favs = store.get("fav", {});
+  const img = v.querySelector(".pv-img"); img.setAttribute("style", photoFill(p)); img.innerHTML = pic(p.img, p.cap);
+  v.querySelector(".pv-cap").innerHTML = `${esc(p.cap)}<small>${esc(p.when || "")}</small>`;
+  v.querySelector(".pv-count").textContent = `${v._i + 1} / ${PHOTOS.length}`;
+  v.querySelector(".pv-fav").classList.toggle("on", !!favs[v._i]);
+  v.querySelectorAll(".pv-arrow").forEach(a => a.style.visibility = PHOTOS.length > 1 ? "visible" : "hidden");
+}
+function stepPhoto(v, d){ v._i = (v._i + d + PHOTOS.length) % PHOTOS.length; showPhoto(v); }
+function refreshGalleries(){ stack.forEach(v => { if (v.querySelector(".gal-grid")) renderGal(v); }); }
+
+/* ===================== LENSA (Instagram-style) ===================== */
+const IG = INSTA;
+const IG_KEYS = Object.keys(IG.users);
+const IGU = k => IG.users[k] || { handle: k, name: P(k).name, bio: "", followers: 0, following: 0 };
+const H2K = {}; IG_KEYS.forEach(k => { H2K[IGU(k).handle.toLowerCase()] = k; });
+function rich(t){
+  return esc(t).replace(/@([A-Za-z0-9._]+)/g, (m, h) => {
+    const hh = h.replace(/\.+$/, ""), trail = h.slice(hh.length), k = H2K[hh.toLowerCase()];
+    return k ? `<button class="mention" data-act="user" data-id="${k}">@${esc(IGU(k).handle)}</button>${trail}` : m;
+  });
+}
+const mentions = (t, k) => new RegExp("@" + IGU(k).handle.replace(/\./g, "\\.") + "(?![A-Za-z0-9_])", "i").test(t);
+const allPosts = () => store.get("myposts", []).concat(IG.posts);
+const findPost = id => allPosts().find(p => p.id === id);
+const baseLiked = p => (p.likes || []).includes(OWNER);
+const isLiked = p => { const m = store.get("liked", {}); return p.id in m ? m[p.id] : baseLiked(p); };
+const likeCount = p => (p.likes || []).length + (p.extra || 0) - (baseLiked(p) ? 1 : 0) + (isLiked(p) ? 1 : 0);
+const isSaved = p => !!store.get("saved", {})[p.id];
+const commentsOf = p => (p.comments || []).concat(store.get("comments", {})[p.id] || []);
+const defFollow = k => k !== OWNER && (IGU(OWNER).follows || IG_KEYS).includes(k);
+const isFollowing = k => { const m = store.get("follow", {}); return k in m ? m[k] : defFollow(k); };
+const followerCount = k => IGU(k).followers + (k === OWNER ? 0 : (isFollowing(k) === defFollow(k) ? 0 : (isFollowing(k) ? 1 : -1)));
+const followingCount = k => k !== OWNER ? IGU(k).following : IGU(k).following + IG_KEYS.reduce((n, o) => n + (o === OWNER || isFollowing(o) === defFollow(o) ? 0 : (isFollowing(o) ? 1 : -1)), 0);
+const bioOf = k => k === OWNER ? store.get("bio", IGU(k).bio) : IGU(k).bio;
+const hasStory = k => (IG.stories[k] || []).length > 0;
+const storySeen = k => !!store.get("seen", {})[k];
+function igAv(k, size, ring){
+  const a = avatar(k, size);
+  return ring ? `<span class="ring${storySeen(k) ? " seen" : ""}" data-ring="${k}" style="padding:${size > 50 ? 4.5 : 3.5}px">${a}</span>` : a;
+}
+const tileHTML = p => `<button class="tile" data-act="post" data-id="${p.id}" style="${photoFill({ who: p.who || p.by })}" aria-label="${esc(p.caption || "")}">${pic(p.img)}</button>`;
+const userRow = (k, follow) => `<div class="urow"><button class="uinfo" data-act="user" data-id="${k}">${igAv(k, 44, hasStory(k))}<span><b>${esc(IGU(k).handle)}</b><small>${esc(IGU(k).name)}</small></span></button>${follow && k !== OWNER ? followBtn(k) : ""}</div>`;
+const followBtn = k => `<button class="fbtn${isFollowing(k) ? " ghost" : ""}" data-act="follow" data-id="${k}">${isFollowing(k) ? "Following" : "Follow"}</button>`;
+
+function postCard(p){
+  const u = IGU(p.by), cs = commentsOf(p), lc = likeCount(p);
+  const likers = (p.likes || []).filter(k => k !== OWNER);
+  const likesLine = lc === 0 ? `<span style="color:var(--muted)">Be the first to like this</span>`
+    : likers.length ? `Liked by <button class="b" data-act="user" data-id="${likers[0]}">${esc(IGU(likers[0]).handle)}</button>${lc > 1 ? ` and <button class="b" data-act="likers" data-id="${p.id}">${fmt(lc - 1)} others</button>` : ""}`
+    : `<button class="b" data-act="likers" data-id="${p.id}">${fmt(lc)} likes</button>`;
+  return `<article class="post" data-post="${p.id}">
+    <header class="phd"><button class="pwho" data-act="user" data-id="${p.by}">${igAv(p.by, 32, hasStory(p.by))}<span><b>${esc(u.handle)}</b>${p.place ? `<small>${esc(p.place)}</small>` : ""}</span></button>
+      <button class="ib" data-act="postmore" data-id="${p.id}" aria-label="More">${ic("more")}</button></header>
+    <div class="media" data-act="media" data-id="${p.id}" style="${photoFill({ who: p.who || p.by })}">${pic(p.img)}<span class="burst">${ic("heart")}</span></div>
+    <div class="acts"><button class="ib like${isLiked(p) ? " on" : ""}" data-act="like" data-id="${p.id}" aria-label="Like">${ic("heart")}</button>
+      <button class="ib" data-act="comments" data-id="${p.id}" aria-label="Comment">${ic("comment")}</button>
+      <button class="ib" data-act="share" data-id="${p.id}" aria-label="Share">${ic("send")}</button><span class="sp1"></span>
+      <button class="ib save${isSaved(p) ? " on" : ""}" data-act="save" data-id="${p.id}" aria-label="Save">${ic("bookmark")}</button></div>
+    <div class="likes">${likesLine}</div>
+    <div class="cap"><button class="b" data-act="user" data-id="${p.by}">${esc(u.handle)}</button> ${rich(p.caption || "")}</div>
+    ${cs.length > 2 ? `<button class="viewc" data-act="comments" data-id="${p.id}">View all ${cs.length} comments</button>` : ""}
+    ${cs.slice(-2).map(c => `<div class="cprev"><button class="b" data-act="user" data-id="${c.by}">${esc(IGU(c.by).handle)}</button> ${rich(c.t)}</div>`).join("")}
+    ${cs.length && cs.length <= 2 ? "" : ""}
+    <div class="ptime">${esc(p.time || "")}</div>
+  </article>`;
+}
+function refreshPost(id){
+  const p = findPost(id); if (!p) return;
+  document.querySelectorAll(`.post[data-post="${id}"]`).forEach(el => { el.outerHTML = postCard(p); });
+}
+function setLike(id, v){
+  const p = findPost(id); const m = store.get("liked", {}); m[id] = v; store.set("liked", m); refreshPost(id);
+}
+
+function storyTray(){
+  const order = [OWNER, ...IG_KEYS.filter(k => k !== OWNER && hasStory(k) && isFollowing(k))];
+  return `<div class="tray">${order.map(k => {
+    const own = k === OWNER, act = own && !hasStory(k) ? "compose" : "story";
+    return `<button class="st" data-act="${act}" data-id="${k}">${igAv(k, 58, hasStory(k))}${own && !hasStory(k) ? '<span class="plus">+</span>' : ""}<span>${own ? "Your story" : esc(IGU(k).handle)}</span></button>`;
+  }).join("")}</div>`;
+}
+const feedPosts = () => allPosts().filter(p => p.by === OWNER || isFollowing(p.by));
+
+let igRoot = null;
+function openLensa(){
+  push(`<div class="ig-top">${backBtn("Home")}<span class="ig-logo" data-act="tab" data-id="home" role="button">${esc(INSTA_NAME)}</span><span class="sp1"></span>
+      <button class="ib" data-act="activity" aria-label="Activity">${ic("heart")}</button><button class="ib" data-act="dms" aria-label="Messages">${ic("send")}</button></div>
+    <div class="scroll ig-body"></div>
+    <nav class="ig-tabs"><button data-act="tab" data-id="home" aria-label="Home">${ic("home")}</button><button data-act="tab" data-id="search" aria-label="Search">${ic("search")}</button>
+      <button data-act="compose" aria-label="New post">${ic("plus")}</button><button data-act="tab" data-id="profile" aria-label="Profile">${avatar(OWNER, 26)}</button></nav>`,
+    { cls: "ig", after: v => { igRoot = v; v._onClose = () => { igRoot = null; }; igShow("home"); } });
+}
+function igShow(tab){
+  if (!igRoot) return;
+  igRoot._tab = tab;
+  const body = igRoot.querySelector(".ig-body");
+  igRoot.querySelectorAll('.ig-tabs [data-act="tab"]').forEach(b => b.classList.toggle("on", b.dataset.id === tab));
+  if (tab === "home") body.innerHTML = storyTray() + (feedPosts().map(postCard).join("") || '<p class="empty">Follow friends to see their posts.</p>');
+  if (tab === "search"){
+    body.innerHTML = `<div class="ig-search"><input type="search" placeholder="Search" autocomplete="off" aria-label="Search"></div><div class="ig-res"></div>`;
+    const inp = body.querySelector("input"), res = body.querySelector(".ig-res");
+    const run = () => { const q = inp.value.trim().toLowerCase();
+      if (!q){ res.innerHTML = `<div class="grid3">${allPosts().filter(p => p.by !== OWNER).map(tileHTML).join("")}</div>`; return; }
+      const ks = IG_KEYS.filter(k => (IGU(k).handle + " " + IGU(k).name).toLowerCase().includes(q));
+      res.innerHTML = ks.length ? ks.map(k => userRow(k, true)).join("") : `<p class="empty">No results for “${esc(inp.value)}”</p>`; };
+    inp.addEventListener("input", run); run();
+  }
+  if (tab === "profile") body.innerHTML = profileBody(OWNER);
+  body.scrollTop = 0;
+}
+function refreshIG(){
+  if (igRoot && igRoot._tab !== "search"){ const b = igRoot.querySelector(".ig-body"), y = b.scrollTop; igShow(igRoot._tab); b.scrollTop = y; }
+  stack.forEach(v => { const pb = v.querySelector(".prof[data-prof]"); if (pb && v !== igRoot) pb.outerHTML = profileBody(pb.dataset.prof); });
+}
+
+function profileBody(k){
+  const u = IGU(k), mine = k === OWNER;
+  const posts = allPosts().filter(p => p.by === k);
+  const tagged = allPosts().filter(p => p.by !== k && ((p.tagged || []).includes(k) || mentions(p.caption || "", k)));
+  return `<div class="prof" data-prof="${k}" style="position:relative">
+    ${mine ? `<button class="ib prof-menu" data-act="profmenu" aria-label="Menu">${ic("menu")}</button>` : ""}
+    ${mine ? `<div style="font-weight:700;font-size:20px;padding:4px 16px 8px">${esc(u.handle)}</div>` : ""}
+    <div class="prow"><button data-act="${hasStory(k) ? "story" : "noop"}" data-id="${k}" aria-label="Story">${igAv(k, 84, hasStory(k))}</button>
+      <div class="stats"><div><b>${posts.length}</b><span>posts</span></div>
+        <button data-act="followers" data-id="${k}"><b>${fmt(followerCount(k))}</b><span>followers</span></button>
+        <button data-act="following" data-id="${k}"><b>${fmt(followingCount(k))}</b><span>following</span></button></div></div>
+    <div class="pname">${esc(u.name)}</div><div class="pbio">${rich(bioOf(k))}</div>
+    <div class="pbtns">${mine
+      ? `<button class="gbtn" data-act="editprofile">Edit profile</button><button class="gbtn" data-act="shareprofile">Share profile</button>`
+      : `<button class="gbtn${isFollowing(k) ? "" : " blue"}" data-act="follow" data-id="${k}">${isFollowing(k) ? "Following" : "Follow"}</button><button class="gbtn" data-act="dm" data-id="${k}">Message</button>`}</div>
+    ${(u.highlights || []).length ? `<div class="hls">${u.highlights.map((h, i) => `<button data-act="highlight" data-id="${k}:${i}"><span class="hl" style="${photoFill({ who: h.who || k })}">${pic(h.cover)}</span><small>${esc(h.title)}</small></button>`).join("")}</div>` : ""}
+    <div class="ptabs"><button class="on" data-act="ptab" data-id="posts" aria-label="Posts">${ic("grid")}</button><button data-act="ptab" data-id="tagged" aria-label="Tagged">${ic("tag")}</button></div>
+    <div class="grid3" data-pt="posts">${posts.map(tileHTML).join("") || '<p class="empty" style="grid-column:1/-1">No posts yet</p>'}</div>
+    <div class="grid3" data-pt="tagged" hidden>${tagged.map(tileHTML).join("") || '<p class="empty" style="grid-column:1/-1">No tagged posts yet</p>'}</div></div>`;
+}
+function openProfile(k){
+  if (k === OWNER && igRoot && topView() === igRoot){ igShow("profile"); return; }
+  push(`<div class="nav">${backBtn("")}<div class="mid"><span class="nm"><b>${esc(IGU(k).handle)}</b></span></div>
+    ${k !== OWNER ? `<button class="ib nav-r" data-act="usermore" data-id="${k}" aria-label="More">${ic("more")}</button>` : ""}</div>
+    <div class="scroll">${profileBody(k)}</div>`, { cls: "ig" });
+}
+function openPeople(title, keys, more){
+  push(`<div class="nav">${backBtn("")}<div class="mid"><span class="nm"><b>${esc(title)}</b></span></div></div>
+    <div class="scroll" style="padding-top:6px">${keys.map(k => userRow(k, true)).join("") || '<p class="empty">No one yet.</p>'}
+    ${more > 0 ? `<div class="more-note">and ${fmt(more)} others</div>` : ""}</div>`, { cls: "ig" });
+}
+function openPost(id){
+  const p = findPost(id); if (!p) return;
+  push(`<div class="nav">${backBtn("")}<div class="mid"><span class="nm"><b>Post</b></span></div></div><div class="scroll">${postCard(p)}</div>`, { cls: "ig" });
+}
+
+function commentsHTML(p){
+  const cl = store.get("clikes", {});
+  return `<div class="crow">${igAv(p.by, 34)}<div class="cbody"><button class="b" data-act="user" data-id="${p.by}">${esc(IGU(p.by).handle)}</button> ${rich(p.caption || "")}<div class="cmeta">${esc(p.time || "")}</div></div></div>
+    <div style="border-top:.5px solid var(--line);margin:4px 0"></div>
+    ${commentsOf(p).map((c, i) => { const key = p.id + ":" + i, on = !!cl[key], n = (c.likes || 0) + (on ? 1 : 0);
+      return `<div class="crow">${igAv(c.by, 34)}<div class="cbody"><button class="b" data-act="user" data-id="${c.by}">${esc(IGU(c.by).handle)}</button> ${rich(c.t)}
+        <div class="cmeta">${esc(c.time || "")}${n ? ` · ${n} like${n > 1 ? "s" : ""}` : ""} · <button data-act="reply" data-id="${c.by}">Reply</button></div></div>
+        <button class="ib sm like${on ? " on" : ""}" data-act="clike" data-id="${key}" aria-label="Like comment">${ic("heart")}</button></div>`; }).join("")
+      || '<p class="empty">No comments yet. Start the conversation.</p>'}`;
+}
+function openComments(id){
+  const p = findPost(id); if (!p) return;
+  push(`<div class="nav">${backBtn("")}<div class="mid"><span class="nm"><b>Comments</b></span></div></div>
+    <div class="scroll"><div class="clist">${commentsHTML(p)}</div></div>
+    <div class="cbox">${avatar(OWNER, 32)}<input type="text" maxlength="300" placeholder="Add a comment for ${esc(IGU(p.by).handle)}..." aria-label="Comment">
+      <button class="post-btn" data-act="sendcomment" data-id="${id}">Post</button></div>`, { cls: "ig", after: v => { v._post = id; } });
+}
+function sendComment(v, id){
+  const inp = v.querySelector(".cbox input"), t = inp.value.trim(); if (!t) return;
+  const all = store.get("comments", {}); (all[id] = all[id] || []).push({ by: OWNER, t, time: "Just now" }); store.set("comments", all);
+  inp.value = ""; v.querySelector(".clist").innerHTML = commentsHTML(findPost(id));
+  const sc = v.querySelector(".scroll"); sc.scrollTop = sc.scrollHeight; refreshPost(id);
+}
+
+/* stories */
+function openStory(k, frames, title){
+  frames = frames || IG.stories[k] || []; if (!frames.length) return;
+  const mine = k === OWNER, h = IGU(k).handle;
+  push(`<div class="sv"><div class="sv-bars">${frames.map(() => "<i><b></b></i>").join("")}</div>
+    <div class="sv-head">${avatar(k, 32)}<b>${esc(title || h)}</b><small class="sv-time"></small><span class="sp1"></span><button class="ib" data-act="svclose" aria-label="Close">${ic("x")}</button></div>
+    <div class="sv-media"></div>
+    <button class="sv-prev" data-act="svstep" data-id="-1" aria-label="Previous"></button><button class="sv-next" data-act="svstep" data-id="1" aria-label="Next"></button>
+    <div class="sv-foot">${mine ? `<span class="sv-own">Seen by ${IG_KEYS.length - 1} people</span>`
+      : `<input type="text" placeholder="Reply to ${esc(h)}..." aria-label="Reply to story"><button class="ib sv-like" data-act="svlike" aria-label="Like">${ic("heart")}</button><button class="ib" data-act="svsend" aria-label="Send">${ic("send")}</button>`}</div></div>`,
+    { cls: "story-view", darkStatus: true, after: v => {
+      v._k = k; v._frames = frames; v._i = 0;
+      v._onClose = () => { clearTimeout(v._timer); const s = store.get("seen", {}); s[k] = true; store.set("seen", s);
+        document.querySelectorAll(`.ring[data-ring="${k}"]`).forEach(r => r.classList.add("seen")); };
+      const inp = v.querySelector(".sv-foot input");
+      if (inp){ inp.addEventListener("focus", () => { clearTimeout(v._timer); v.querySelector(".sv-bars i.run b")?.style.setProperty("animation-play-state", "paused"); });
+        inp.addEventListener("keydown", e => { if (e.key === "Enter") storyReply(v); }); }
+      showFrame(v);
+    }});
+}
+function showFrame(v){
+  const f = v._frames[v._i];
+  v.querySelectorAll(".sv-bars i").forEach((b, j) => { b.className = j < v._i ? "done" : ""; b.innerHTML = "<b></b>"; });
+  void v.offsetWidth; v.querySelectorAll(".sv-bars i")[v._i].className = "run";
+  const m = v.querySelector(".sv-media"); m.setAttribute("style", photoFill({ who: f.who || v._k })); m.innerHTML = pic(f.img) + (f.text ? `<div class="sv-text">${esc(f.text)}</div>` : "");
+  v.querySelector(".sv-time").textContent = f.time || "";
+  clearTimeout(v._timer); v._timer = setTimeout(() => storyStep(v, 1), 5000);
+}
+function storyStep(v, d){
+  if (topView() !== v) return;
+  const n = v._i + d;
+  if (n < 0){ v._i = 0; showFrame(v); return; }
+  if (n >= v._frames.length){ clearTimeout(v._timer); goBack(); return; }
+  v._i = n; showFrame(v);
+}
+function storyReply(v){
+  const inp = v.querySelector(".sv-foot input"); const t = inp ? inp.value.trim() : "";
+  if (!t){ toast("Type something first"); return; }
+  addDM(v._k, { f: OWNER, t: `Replied to your story: ${t}` }); inp.value = ""; inp.blur();
+  toast("Sent"); v._timer = setTimeout(() => storyStep(v, 1), 1200);
+}
+
+/* DMs */
+function dmThreads(){
+  const extra = store.get("dmx", {});
+  const list = (IG.dms || []).filter(t => t.between.includes(OWNER)).map(t => ({ other: t.between.find(x => x !== OWNER), messages: t.messages }));
+  Object.keys(extra).forEach(o => { if (!list.find(t => t.other === o)) list.push({ other: o, messages: [] }); });
+  return list.map(t => ({ other: t.other, messages: t.messages.concat(extra[t.other] || []) }));
+}
+function addDM(k, msg){
+  const x = store.get("dmx", {}); const cur = x[k] || [];
+  if (!cur.some(m => m.d === "Today")) cur.push({ d: "Today" });
+  cur.push(msg); x[k] = cur; store.set("dmx", x);
+  stack.forEach(v => { if (v._dm === k) renderDM(v); });
+  stack.forEach(v => { if (v._dmlist) renderDMList(v); });
+}
+function openDMList(){
+  push(`<div class="nav">${backBtn("")}<div class="mid"><span class="nm"><b>${esc(IGU(OWNER).handle)}</b></span></div>
+    <button class="ib nav-r" data-act="newdm" aria-label="New message">${ic("plus")}</button></div><div class="scroll dm-list"></div>`,
+    { cls: "ig", after: v => { v._dmlist = true; renderDMList(v); } });
+}
+function renderDMList(v){
+  const th = dmThreads();
+  v.querySelector(".dm-list").innerHTML = `<div class="sect">Messages</div>` + (th.map(t => {
+    const last = [...t.messages].reverse().find(m => m.t || m.img);
+    return `<button class="act-row" data-act="dm" data-id="${t.other}">${igAv(t.other, 52, hasStory(t.other))}<span class="tx"><b>${esc(IGU(t.other).name)}</b><br><small>${last ? esc((last.f === OWNER ? "You: " : "") + (last.t || "📷 Photo")) : "Start a conversation"}</small></span></button>`;
+  }).join("") || '<p class="empty">No messages yet. Tap + to start one.</p>');
+}
+function openDM(k){
+  push(`<div class="nav">${backBtn("")}<div class="mid">${avatar(k, 30)}<span class="nm">${esc(IGU(k).handle)}</span></div></div>
+    <div class="scroll"><div class="chat"></div></div>
+    <div class="dmbox"><input type="text" maxlength="500" placeholder="Message..." aria-label="Message"><button class="post-btn" data-act="dmsend" data-id="${k}">Send</button></div>`,
+    { cls: "ig", after: v => { v._dm = k; renderDM(v); } });
+}
+function renderDM(v){
+  const k = v._dm, t = dmThreads().find(x => x.other === k) || { messages: [] };
+  const head = `<div class="dm-empty">${avatar(k, 84)}<b>${esc(IGU(k).name)}</b><small>${esc(IGU(k).handle)} · ${INSTA_NAME}</small><button class="gbtn" data-act="user" data-id="${k}">View profile</button></div>`;
+  v.querySelector(".chat").innerHTML = head + messagesHTML({ messages: t.messages, group: false });
+  const s = v.querySelector(".scroll"); requestAnimationFrame(() => { s.scrollTop = s.scrollHeight; });
+}
+function sendDM(v, k){
+  const inp = v.querySelector(".dmbox input"), t = inp.value.trim(); if (!t) return;
+  inp.value = ""; addDM(k, { f: OWNER, t });
+}
+
+function activityHTML(){
+  const items = [];
+  allPosts().filter(p => p.by === OWNER).forEach(p => {
+    const lk = (p.likes || []).filter(x => x !== OWNER), others = lk.length - 1 + (p.extra || 0);
+    if (lk.length) items.push({ k: lk[0], p, html: `<b>${esc(IGU(lk[0]).handle)}</b>${others > 0 ? ` and ${fmt(others)} others` : ""} liked your post.` });
+    commentsOf(p).filter(c => c.by !== OWNER).forEach(c => items.push({ k: c.by, p, html: `<b>${esc(IGU(c.by).handle)}</b> commented: ${rich(c.t)}` }));
+  });
+  allPosts().filter(p => p.by !== OWNER).forEach(p => {
+    if (mentions(p.caption || "", OWNER)) items.push({ k: p.by, p, html: `<b>${esc(IGU(p.by).handle)}</b> tagged you in a post.` });
+    commentsOf(p).filter(c => c.by !== OWNER && mentions(c.t, OWNER)).forEach(c => items.push({ k: c.by, p, html: `<b>${esc(IGU(c.by).handle)}</b> mentioned you: ${rich(c.t)}` }));
+  });
+  return items.map(it => `<div class="act-row">${igAv(it.k, 44, hasStory(it.k))}<span class="tx">${it.html} <small>${esc(it.p.time || "")}</small></span>
+    <button class="th" data-act="post" data-id="${it.p.id}" style="${photoFill({ who: it.p.who || it.p.by })}" aria-label="View post">${pic(it.p.img)}</button></div>`).join("")
+    || '<p class="empty">No activity yet.</p>';
+}
+function openActivity(){
+  push(`<div class="nav">${backBtn("")}<div class="mid"><span class="nm"><b>Notifications</b></span></div></div><div class="scroll"><div class="sect">New</div>${activityHTML()}</div>`, { cls: "ig" });
+}
+
+function openCompose(){
+  push(`<div class="nav">${backBtn("")}<div class="mid"><span class="nm"><b>New post</b></span></div><button class="nav-r share-btn" data-act="publish">Share</button></div>
+    <div class="scroll"><div class="cmp-prev"></div><textarea class="cmp-cap" maxlength="500" placeholder="Write a caption... use @ to tag friends"></textarea>
+    <div class="cmp-lbl">Choose from Photos</div><div class="grid3 cmp-grid">${PHOTOS.map((p, i) => `<button class="tile${i === 0 ? " sel" : ""}" data-act="pick" data-id="${i}" style="${photoFill(p)}" aria-label="${esc(p.cap)}">${pic(p.img)}</button>`).join("")}</div></div>`,
+    { cls: "ig", after: v => { v._pick = 0; pickPhoto(v, 0); } });
+}
+function pickPhoto(v, i){
+  v._pick = i; const p = PHOTOS[i] || { who: OWNER };
+  const pr = v.querySelector(".cmp-prev"); pr.setAttribute("style", photoFill(p)); pr.innerHTML = pic(p.img);
+  v.querySelectorAll(".cmp-grid .tile").forEach(t => t.classList.toggle("sel", +t.dataset.id === i));
+}
+function publish(v){
+  const p = PHOTOS[v._pick] || { who: OWNER }, cap = v.querySelector(".cmp-cap").value.trim();
+  const mine = store.get("myposts", []);
+  mine.unshift({ id: "u" + Date.now(), by: OWNER, who: p.who || OWNER, img: p.img || "", caption: cap, time: "Just now", likes: [], extra: 0, comments: [] });
+  store.set("myposts", mine); goBack(); toast("Shared"); setTimeout(() => igShow("profile"), 350);
+}
+
+/* ===================== MUZIK (plays YouTube links) ===================== */
+const yt = { ready: false, loading: false, player: null, idx: -1, playing: false, queued: null, timer: null };
+function ytId(url){ const m = String(url || "").match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : ""; }
+const thumb = s => { const id = ytId(s && s.youtube); return id ? `https://i.ytimg.com/vi/${id}/mqdefault.jpg` : (s && s.cover) || ""; };
+const playable = () => MUSIC.songs.map((s, i) => ytId(s.youtube) ? i : -1).filter(i => i >= 0);
+function loadYT(){
+  if (yt.loading) return; yt.loading = true;
+  window.onYouTubeIframeAPIReady = () => { yt.ready = true; if (yt.queued !== null){ const q = yt.queued; yt.queued = null; playSong(q); } };
+  const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api";
+  s.onerror = () => { yt.loading = false; toast("Couldn’t connect to YouTube. Check your internet."); };
+  document.head.appendChild(s);
+}
+function playSong(i){
+  const s = MUSIC.songs[i], id = ytId(s && s.youtube);
+  if (!id){ toast("This song doesn’t have a YouTube link yet."); return; }
+  yt.idx = i; musicUI();
+  if (!yt.ready){ yt.queued = i; loadYT(); return; }
+  if (!yt.player){
+    yt.player = new YT.Player("ytPlayer", { videoId: id, playerVars: { playsinline: 1, rel: 0, autoplay: 1 }, events: {
+      onReady: e => { try { e.target.playVideo(); } catch (err) {} },
+      onStateChange: e => { yt.playing = e.data === 1; if (e.data === 0) nextSong(1); musicUI(); },
+      onError: () => { yt.playing = false; musicUI(); toast("This video can’t play here. Tap “Open in YouTube”."); }
+    }});
+  } else { try { yt.player.loadVideoById(id); } catch (err) {} }
+  clearInterval(yt.timer); yt.timer = setInterval(tickMusic, 500);
+}
+function togglePlay(){
+  if (!yt.player || yt.idx < 0){ const p = playable(); if (p.length) playSong(p[0]); else toast("Add YouTube links in the file first."); return; }
+  try { yt.playing ? yt.player.pauseVideo() : yt.player.playVideo(); } catch (e) {}
+}
+function nextSong(d){
+  const p = playable(); if (!p.length) return;
+  const pos = p.indexOf(yt.idx); playSong(p[((pos < 0 ? 0 : pos + d) % p.length + p.length) % p.length]);
+}
+function shuffleSong(){ const p = playable(); if (!p.length){ toast("Add YouTube links in the file first."); return; } playSong(p[Math.floor(Math.random() * p.length)]); }
+const mmss = t => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
+function tickMusic(){
+  if (!yt.player || !yt.player.getCurrentTime) return;
+  let c = 0, d = 0; try { c = yt.player.getCurrentTime(); d = yt.player.getDuration(); } catch (e) {}
+  document.querySelectorAll(".np-bar i").forEach(b => b.style.width = d ? (c / d * 100) + "%" : "0");
+  document.querySelectorAll(".np-cur").forEach(x => x.textContent = mmss(c));
+  document.querySelectorAll(".np-dur").forEach(x => x.textContent = d ? "-" + mmss(d - c) : "0:00");
+}
+function miniHTML(){
+  const s = MUSIC.songs[yt.idx]; if (!s) return "";
+  return `<button class="mini" data-act="nowplaying"><span class="th" style="${photoFill({ who: OWNER })}">${pic(thumb(s))}</span>
+    <span class="tx"><b>${esc(s.title)}</b><small>${esc(s.artist || "")}</small></span>
+    <span class="ib" data-act="playpause" role="button" aria-label="${yt.playing ? "Pause" : "Play"}">${ic(yt.playing ? "pause" : "play")}</span>
+    <span class="ib" data-act="nextsong" role="button" aria-label="Next">${ic("next")}</span></button>`;
+}
+function musicUI(){
+  document.querySelectorAll("[data-mini]").forEach(m => { m.innerHTML = miniHTML(); m.hidden = yt.idx < 0; });
+  document.querySelectorAll(".song").forEach(r => { const on = +r.dataset.id === yt.idx; r.classList.toggle("now", on);
+    const eq = r.querySelector(".eq"); if (eq) eq.style.display = on && yt.playing ? "inline-flex" : "none"; });
+  stack.forEach(v => { if (v.classList.contains("np")) fillNP(v); });
+}
+function songRows(){
+  return MUSIC.songs.map((s, i) => { const ok = !!ytId(s.youtube);
+    return `<button class="song${ok ? "" : " off"}" data-act="song" data-id="${i}"><span class="th" style="${photoFill({ who: s.who || OWNER })}">${pic(thumb(s))}</span>
+      <span class="tx"><b><span class="eq" style="display:none"><i></i><i></i><i></i></span>${esc(s.title)}</b><small>${esc(s.artist || "")}${ok ? "" : " · no link yet"}</small></span></button>`; }).join("");
+}
+function openMusic(){
+  loadYT();
+  const me = P(OWNER);
+  push(`${topNav()}<div class="scroll"><div class="big-title">Music</div>
+    <div class="pl-card" style="background:linear-gradient(140deg, ${me.color}, #1a1424)"><small>PLAYLIST</small><h3>${esc(MUSIC.playlist || "Favorites")}</h3><p>${esc(MUSIC.note || me.name)} · ${MUSIC.songs.length} songs</p>
+      <div class="pl-btns"><button data-act="playall">${ic("play")}Play</button><button data-act="shuffle">${ic("shuffle")}Shuffle</button></div></div>
+    ${songRows()}
+    ${MUSIC.channel ? `<a class="chan" href="${esc(MUSIC.channel)}" target="_blank" rel="noopener"><span class="yt">${ic("play")}</span>${esc(MUSIC.channelName || "Our YouTube channel")}<span class="sp1"></span>›</a>` : '<div style="height:20px"></div>'}
+    </div><div class="music-mini" data-mini hidden></div>`, { cls: "music", after: () => musicUI() });
+}
+function fillNP(v){
+  const s = MUSIC.songs[yt.idx] || { title: "Not Playing", artist: "" }, id = ytId(s.youtube);
+  v.querySelector(".np-art").innerHTML = `${pic(thumb(s))}<span>${yt.ready ? "" : "Loading YouTube player…"}</span>`;
+  v.querySelector(".np-info").innerHTML = `<b>${esc(s.title)}</b><small>${esc(s.artist || "")}</small>`;
+  v.querySelector(".np-pp").innerHTML = ic(yt.playing ? "pause" : "play");
+  v.querySelector(".np-links").innerHTML = `${id ? `<a href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">Open in YouTube</a>` : ""}${MUSIC.channel ? `<a href="${esc(MUSIC.channel)}" target="_blank" rel="noopener">${esc(MUSIC.channelName || "Our channel")}</a>` : ""}`;
+}
+function openNowPlaying(){
+  if (yt.idx < 0) return;
+  push(`<div class="nav">${backBtn("Music")}</div><div class="scroll"><div class="np-art" style="${photoFill({ who: OWNER })}"></div><div class="np-info"></div>
+    <div class="np-bar" data-act="seek"><i></i></div><div class="np-times"><span class="np-cur">0:00</span><span class="np-dur">0:00</span></div>
+    <div class="np-ctl"><button data-act="prevsong" aria-label="Previous">${ic("prev")}</button><button class="big np-pp" data-act="playpause" aria-label="Play or pause"></button><button data-act="nextsong" aria-label="Next">${ic("next")}</button></div>
+    <div class="np-links"></div></div>`, { cls: "np music", after: v => fillNP(v) });
+}
+function syncChrome(){ const t = topView(); phone.classList.toggle("np-open", !!(t && t.classList.contains("np") && unlocked)); }
+
+/* ===================== one click handler for every button above ===================== */
+let lastTap = { id: null, t: 0 };
+phone.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]"); if (!el || !phone.contains(el)) return;
+  const a = el.dataset.act, id = el.dataset.id, v = el.closest(".view");
+  const stop = () => { e.stopPropagation(); e.preventDefault(); };
+  switch (a){
+    case "galtab": v._tab = id; renderGal(v); break;
+    case "photo": openPhoto(+id); break;
+    case "pvstep": stepPhoto(v, +id); break;
+    case "pvfav": { const f = store.get("fav", {}); f[v._i] = !f[v._i]; if (!f[v._i]) delete f[v._i]; store.set("fav", f); showPhoto(v); refreshGalleries(); toast(f[v._i] ? "Added to Favorites" : "Removed from Favorites"); break; }
+    case "pvshare": friendsSheet("Send Photo", k => toast(`Sent to ${P(k).name}`)); break;
+    case "pvinfo": { const p = PHOTOS[v._i]; sheet(`<div class="sh-title">Info</div><div class="sh-text">${esc(p.cap)}<small>${esc(p.when || "")} · Photo ${v._i + 1} of ${PHOTOS.length}</small></div><div class="sh-text"><small>People</small>${esc(P(p.who).name)}</div><button class="sh-cancel" data-close>Close</button>`); break; }
+
+    case "tab": igShow(id); break;
+    case "user": stop(); openProfile(id); break;
+    case "post": openPost(id); break;
+    case "media": { const now = Date.now();
+      if (lastTap.id === id && now - lastTap.t < 350){ setLike(id, true);
+        requestAnimationFrame(() => document.querySelectorAll(`.post[data-post="${id}"] .burst`).forEach(b => { b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }));
+        lastTap = { id: null, t: 0 }; }
+      else lastTap = { id, t: now };
+      break; }
+    case "like": { const p = findPost(id); setLike(id, !isLiked(p)); break; }
+    case "save": { const s = store.get("saved", {}); s[id] = !s[id]; if (!s[id]) delete s[id]; store.set("saved", s); refreshPost(id); toast(s[id] ? "Saved" : "Removed from saved"); break; }
+    case "comments": openComments(id); break;
+    case "sendcomment": sendComment(v, id); break;
+    case "reply": { const inp = v.querySelector(".cbox input"); if (inp){ inp.value = "@" + IGU(id).handle + " "; inp.focus(); } break; }
+    case "clike": { const c = store.get("clikes", {}); c[id] = !c[id]; if (!c[id]) delete c[id]; store.set("clikes", c); v.querySelector(".clist").innerHTML = commentsHTML(findPost(v._post)); break; }
+    case "share": { const p = findPost(id); friendsSheet("Share", k => addDM(k, { f: OWNER, t: `↪ Post by @${IGU(p.by).handle}: ${p.caption || ""}` })); break; }
+    case "postmore": { const p = findPost(id), saved = isSaved(p);
+      const card = sheet(`<button class="sh-btn" data-x="save">${saved ? "Remove from saved" : "Save"}</button><button class="sh-btn" data-x="profile">Go to @${esc(IGU(p.by).handle)}</button><button class="sh-btn" data-x="link">Copy link</button><button class="sh-btn" data-x="share">Share to...</button><button class="sh-cancel" data-close>Cancel</button>`);
+      card.querySelectorAll("[data-x]").forEach(b => b.onclick = () => { const x = b.dataset.x; closeSheet();
+        if (x === "save"){ const s = store.get("saved", {}); s[id] = !saved; if (saved) delete s[id]; store.set("saved", s); refreshPost(id); toast(saved ? "Removed from saved" : "Saved"); }
+        if (x === "profile") openProfile(p.by);
+        if (x === "link") copyLink("Link copied");
+        if (x === "share") setTimeout(() => friendsSheet("Share", k => addDM(k, { f: OWNER, t: `↪ Post by @${IGU(p.by).handle}: ${p.caption || ""}` })), 250); });
+      break; }
+    case "likers": { const p = findPost(id), ks = (p.likes || []).filter(k => k !== OWNER).concat(isLiked(p) ? [OWNER] : []);
+      openPeople("Likes", ks, likeCount(p) - ks.length); break; }
+    case "follow": { const f = store.get("follow", {}); f[id] = !isFollowing(id); store.set("follow", f);
+      toast(f[id] ? `You’re now following ${IGU(id).handle}` : `Unfollowed ${IGU(id).handle}`);
+      document.querySelectorAll(`[data-act="follow"][data-id="${id}"]`).forEach(b => { const on = f[id]; b.textContent = on ? "Following" : "Follow";
+        if (b.classList.contains("fbtn")) b.classList.toggle("ghost", on); else b.classList.toggle("blue", !on); });
+      document.querySelectorAll(`.prof[data-prof]`).forEach(pb => { const st = pb.querySelectorAll(".stats b"); const k = pb.dataset.prof; st[1].textContent = fmt(followerCount(k)); st[2].textContent = fmt(followingCount(k)); });
+      break; }
+    case "followers": openPeople("Followers", IG_KEYS.filter(k => k !== id), followerCount(id) - (IG_KEYS.length - 1)); break;
+    case "following": openPeople("Following", IG_KEYS.filter(k => k !== id && (id !== OWNER || isFollowing(k))), followingCount(id) - (id === OWNER ? IG_KEYS.filter(k => k !== OWNER && isFollowing(k)).length : IG_KEYS.length - 1)); break;
+    case "ptab": { const pr = el.closest(".prof"); pr.querySelectorAll(".ptabs button").forEach(b => b.classList.toggle("on", b === el)); pr.querySelectorAll("[data-pt]").forEach(g => g.hidden = g.dataset.pt !== id); break; }
+    case "story": stop(); openStory(id); break;
+    case "highlight": { const [k, i] = id.split(":"); const h = IGU(k).highlights[+i]; openStory(k, h.frames, h.title); break; }
+    case "svclose": goBack(); break;
+    case "svstep": storyStep(v, +id); break;
+    case "svlike": el.classList.toggle("on"); if (el.classList.contains("on")) toast("You liked this story"); break;
+    case "svsend": storyReply(v); break;
+    case "activity": openActivity(); break;
+    case "dms": openDMList(); break;
+    case "dm": stop(); openDM(id); break;
+    case "dmsend": sendDM(v, id); break;
+    case "newdm": { const card = sheet(`<div class="sh-title">New message</div>${IG_KEYS.filter(k => k !== OWNER).map(k => `<button class="act-row" data-to="${k}">${igAv(k, 40)}<span class="tx"><b>${esc(IGU(k).name)}</b><br><small>${esc(IGU(k).handle)}</small></span></button>`).join("")}<button class="sh-cancel" data-close>Cancel</button>`);
+      card.querySelectorAll("[data-to]").forEach(b => b.onclick = () => { closeSheet(); openDM(b.dataset.to); }); break; }
+    case "usermore": { const k = id; const card = sheet(`<button class="sh-btn" data-x="link">Copy profile link</button><button class="sh-btn" data-x="share">Share this profile</button><button class="sh-btn" data-x="dm">Send message</button><button class="sh-cancel" data-close>Cancel</button>`);
+      card.querySelectorAll("[data-x]").forEach(b => b.onclick = () => { const x = b.dataset.x; closeSheet();
+        if (x === "link") copyLink("Profile link copied");
+        if (x === "share") setTimeout(() => friendsSheet("Share Profile", o => addDM(o, { f: OWNER, t: `↪ Profile: @${IGU(k).handle}` })), 250);
+        if (x === "dm") openDM(k); }); break; }
+    case "compose": openCompose(); break;
+    case "pick": pickPhoto(v, +id); break;
+    case "publish": publish(v); break;
+    case "editprofile": { const card = sheet(`<div class="sh-title">Edit bio</div><textarea class="sh-area" maxlength="150">${esc(bioOf(OWNER))}</textarea><button class="sh-btn" data-x="save" style="color:#4f8ef7;font-weight:600;text-align:center">Save</button><button class="sh-cancel" data-close>Cancel</button>`);
+      card.querySelector("[data-x]").onclick = () => { store.set("bio", card.querySelector("textarea").value.trim()); closeSheet(); refreshIG(); toast("Profile updated"); }; break; }
+    case "shareprofile": copyLink("Profile link copied"); break;
+    case "profmenu": { const card = sheet(`<button class="sh-btn" data-x="saved">Saved</button><button class="sh-btn" data-x="act">Your activity</button><button class="sh-btn red" data-x="reset">Reset this phone</button><button class="sh-cancel" data-close>Cancel</button>`);
+      card.querySelectorAll("[data-x]").forEach(b => b.onclick = () => { const x = b.dataset.x; closeSheet();
+        if (x === "saved"){ const sv = allPosts().filter(isSaved); push(`<div class="nav">${backBtn("")}<div class="mid"><span class="nm"><b>Saved</b></span></div></div><div class="scroll"><div class="grid3">${sv.map(tileHTML).join("") || '<p class="empty" style="grid-column:1/-1">Tap the save icon on a post to keep it here.</p>'}</div></div>`, { cls: "ig" }); }
+        if (x === "act") openActivity();
+        if (x === "reset" && confirm("Erase all the likes, comments, posts and messages you added on this phone?")){ store.reset(); refreshIG(); refreshGalleries(); toast("Phone reset"); } }); break; }
+    case "noop": break;
+
+    case "song": playSong(+id); break;
+    case "playall": { const p = playable(); if (p.length) playSong(p[0]); else toast("Add YouTube links in the file first."); break; }
+    case "shuffle": shuffleSong(); break;
+    case "playpause": stop(); togglePlay(); break;
+    case "nextsong": stop(); nextSong(1); break;
+    case "prevsong": nextSong(-1); break;
+    case "nowplaying": openNowPlaying(); break;
+    case "seek": { if (!yt.player || !yt.player.getDuration) break; const r = el.getBoundingClientRect(); try { yt.player.seekTo(yt.player.getDuration() * Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), true); } catch (err) {} break; }
+  }
+});
+phone.addEventListener("keydown", e => {
+  if (e.key !== "Enter") return;
+  const v = e.target.closest(".view"); if (!v) return;
+  if (e.target.closest(".cbox")){ e.preventDefault(); sendComment(v, v._post); }
+  if (e.target.closest(".dmbox")){ e.preventDefault(); sendDM(v, v._dm); }
+});
+
+
+/* ===================== PHONE ===================== */
+const TI = {
+  star: '<path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.1l-5.7 3.2 1.2-6.4-4.7-4.4 6.4-.8z"/>',
+  clock: '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm.9 10.4V6.5h-1.8v6.6l4.6 2.8.9-1.5z"/>',
+  person: '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4.2a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8zm0 13.8a8 8 0 0 1-6.2-2.9c1.4-1.8 3.7-2.7 6.2-2.7s4.8.9 6.2 2.7A8 8 0 0 1 12 20z"/>',
+  grid9: '<circle cx="5.5" cy="4.5" r="2"/><circle cx="12" cy="4.5" r="2"/><circle cx="18.5" cy="4.5" r="2"/><circle cx="5.5" cy="11" r="2"/><circle cx="12" cy="11" r="2"/><circle cx="18.5" cy="11" r="2"/><circle cx="5.5" cy="17.5" r="2"/><circle cx="12" cy="17.5" r="2"/><circle cx="18.5" cy="17.5" r="2"/><circle cx="12" cy="22" r="1.6"/>',
+  vm: '<path d="M6.5 7.5a4.5 4.5 0 0 0-1.2 8.8h13.4a4.5 4.5 0 1 0-4-2.5H10a4.5 4.5 0 0 0-3.5-6.3zm0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zm11 0a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/>',
+  call: '<path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/>',
+  msg: '<path d="M12 3C6.5 3 2 6.7 2 11.2c0 2.6 1.5 4.9 3.9 6.4-.2 1.3-.9 2.6-2 3.4 2 0 3.8-.7 5-1.8 1 .3 2 .4 3.1.4 5.5 0 10-3.7 10-8.3S17.5 3 12 3z"/>',
+  video: '<path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h10A1.5 1.5 0 0 1 16 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 3 17.5zM17 10l4-2.5v9L17 14z"/>',
+  mail: '<path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1.5 2v.3L12 12l7.5-4.7V7z"/>',
+  mute: '<path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3zM5 11h2a5 5 0 0 0 10 0h2a7 7 0 0 1-6 6.9V21h-2v-3.1A7 7 0 0 1 5 11z"/><path d="M3 3l18 18" stroke="#fff" stroke-width="0"/>',
+  speaker: '<path d="M3 9h4l5-4v14l-5-4H3zM15.5 8.5a5 5 0 0 1 0 7l-1.4-1.4a3 3 0 0 0 0-4.2zM18.3 5.7a9 9 0 0 1 0 12.6l-1.4-1.4a7 7 0 0 0 0-9.8z"/>',
+  add: '<path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z"/>',
+  out: '<path d="M14 3h7v7h-2V6.4l-7.3 7.3-1.4-1.4L17.6 5H14zM5 5h6v2H7v10h10v-4h2v6H5z"/>',
+  play: '<path d="M7 4.5v15l13-7.5z"/>', pause: '<rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/>'
+};
+const ti = n => `<svg viewBox="0 0 24 24" fill-rule="evenodd" aria-hidden="true">${TI[n]}</svg>`;
+const telName = k => (P(k).name || k);
+const missedTotal = () => (CALLS.recents || []).filter(r => r.type === "missed").reduce((n, r) => n + (r.count || 1), 0);
+const vmList = () => (CALLS.voicemails || []).filter((v, i) => !store.get("vmdel", {})[i]).map(v => v);
+const vmUnheard = () => (CALLS.voicemails || []).filter((v, i) => !store.get("vmdel", {})[i] && !store.get("vmheard", {})[i]).length;
+function phoneBadge(){
+  const n = store.get("missedSeen", false) ? 0 : missedTotal();
+  document.querySelectorAll('[data-app="telefon"]').forEach(a => { let b = a.querySelector(".badge");
+    if (!n){ if (b) b.remove(); return; }
+    if (!b){ b = document.createElement("b"); b.className = "badge"; a.prepend(b); } b.textContent = n; });
+}
+phoneBadge();
+
+let telRoot = null;
+function openPhone(tab){
+  push(`<div class="nav">${backBtn("Home")}</div><div class="scroll tel-body"></div>
+    <nav class="tel-tabs">${[["fav","Favorites","star"],["rec","Recents","clock"],["con","Contacts","person"],["key","Keypad","grid9"],["vm","Voicemail","vm"]].map(([id, l, i]) =>
+      `<button data-act="teltab" data-id="${id}">${ti(i)}${l}${id === "vm" && vmUnheard() ? `<b class="badge">${vmUnheard()}</b>` : ""}</button>`).join("")}</nav>`,
+    { cls: "tel", after: v => { telRoot = v; v._onClose = () => { telRoot = null; }; telShow(tab || "rec"); } });
+}
+function telShow(tab){
+  if (!telRoot) return;
+  telRoot._tab = tab; const body = telRoot.querySelector(".tel-body");
+  telRoot.querySelectorAll(".tel-tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === tab));
+  if (tab === "fav") body.innerHTML = `<div class="big-title">Favorites</div>` + ((CALLS.favorites || []).map(k =>
+      `<div class="trow"><button class="nm" style="display:flex;align-items:center;gap:12px;text-align:left" data-act="dial" data-id="${k}">${avatar(k,40)}<span class="tx" style="border:0"><span class="nm"><b>${esc(telName(k))}</b><small>mobile</small></span></span></button><button class="info" data-act="contact" data-id="${k}" aria-label="Info">i</button></div>`).join("") || '<p class="empty">No Favorites</p>');
+  if (tab === "rec"){ store.set("missedSeen", true); phoneBadge(); renderRecents(body, telRoot._recSeg || "all"); }
+  if (tab === "con") body.innerHTML = contactsHTML();
+  if (tab === "key"){ telRoot._num = telRoot._num || ""; body.innerHTML = keypadHTML(telRoot._num); }
+  if (tab === "vm") body.innerHTML = vmHTML();
+  body.scrollTop = 0;
+}
+function renderRecents(body, seg){
+  telRoot._recSeg = seg;
+  const rows = (CALLS.recents || []).filter(r => seg === "all" || r.type === "missed");
+  body.innerHTML = `<div class="big-title">Recents</div><div class="seg2"><button class="${seg === "all" ? "on" : ""}" data-act="recseg" data-id="all">All</button><button class="${seg === "missed" ? "on" : ""}" data-act="recseg" data-id="missed">Missed</button></div>` +
+    (rows.map(r => `<div class="trow"><button style="flex:1;min-width:0;display:flex;gap:10px;align-items:center;text-align:left" data-act="dial" data-id="${r.who}">
+      <span class="tx"><span class="nm"><b class="${r.type === "missed" ? "miss" : ""}">${esc(telName(r.who))}${(r.count || 1) > 1 ? ` (${r.count})` : ""}</b>
+      <small>${r.type === "out" ? ti("out") : ""}${r.video ? "FaceTime Video" : "mobile"}</small></span><span class="when">${esc(r.when || "")}</span></span></button>
+      <button class="info" data-act="contact" data-id="${r.who}" aria-label="Info">i</button></div>`).join("") || '<p class="empty">No Missed Calls</p>');
+}
+function contactsHTML(){
+  const keys = Object.keys(PEOPLE).filter(k => k !== OWNER && !(PEOPLE[k].hidden)).sort((a, b) => telName(a).localeCompare(telName(b)));
+  let html = `<div class="big-title">Contacts</div><button class="mycard" data-act="contact" data-id="${OWNER}">${avatar(OWNER, 56)}<span><b>${esc(telName(OWNER))}</b><small>My Card</small></span></button>`, last = "";
+  keys.forEach(k => { const L = telName(k)[0].toUpperCase(); if (L !== last){ html += `<div class="letter">${esc(L)}</div>`; last = L; }
+    html += `<button class="trow" data-act="contact" data-id="${k}"><span class="tx" style="padding:8px 0 12px"><span class="nm"><b style="font-weight:500">${esc(telName(k))}</b></span></span></button>`; });
+  return html;
+}
+const KL = ["","ABC","DEF","GHI","JKL","MNO","PQRS","TUV","WXYZ"];
+function keypadHTML(num){
+  return `<div class="kp"><div class="kp-num">${esc(num)}</div><div class="kp-grid">${[1,2,3,4,5,6,7,8,9].map(n => `<button data-act="kp" data-id="${n}">${n}<small>${KL[n-1]}</small></button>`).join("")}
+    <button data-act="kp" data-id="*">*</button><button data-act="kp" data-id="0">0<small>+</small></button><button data-act="kp" data-id="#">#</button></div>
+    <div class="kp-row"><span></span><button class="callbtn" data-act="kpcall" aria-label="Call">${ti("call")}</button>${num ? '<button class="kp-del" data-act="kpdel" aria-label="Delete">⌫</button>' : "<span></span>"}</div></div>`;
+}
+function vmHTML(){
+  const del = store.get("vmdel", {}), heard = store.get("vmheard", {}), open = telRoot._vmOpen;
+  const items = (CALLS.voicemails || []).map((v, i) => ({ v, i })).filter(x => !del[x.i]);
+  return `<div class="big-title">Voicemail</div>` + (items.map(({ v, i }) => `<div class="vm">
+    <button class="trow" data-act="vmopen" data-id="${i}"><span class="tx"><span class="nm"><b>${heard[i] ? "" : '<span style="color:#007aff">● </span>'}${esc(telName(v.who))}</b><small>${esc(v.when || "")}</small></span><span class="when">${esc(v.dur || "")}</span></span></button>
+    ${open === i ? `<div class="vm-body"><div class="vm-t"><small>TRANSCRIPTION</small>${esc(v.text || "")}</div>
+      <div class="vm-ctl"><button class="vm-play" data-act="vmplay" data-id="${i}" aria-label="Play">${ti("play")}</button><span class="vm-bar"><i></i></span><span class="vm-time">${esc(v.dur || "0:00")}</span></div>
+      <div class="vm-acts"><button data-act="dial" data-id="${v.who}">Call Back</button><button data-act="contact" data-id="${v.who}">Contact</button><span class="sp1"></span><button class="red" data-act="vmdel" data-id="${i}">Delete</button></div></div>` : ""}
+  </div>`).join("") || '<p class="empty">No Voicemail</p>');
+}
+let vmAudio = null, vmTimer = null;
+function stopVM(){ if (vmAudio){ try { vmAudio.pause(); } catch (e) {} vmAudio = null; } clearInterval(vmTimer); vmTimer = null; }
+function playVM(i, btn){
+  const v = CALLS.voicemails[i]; const bar = btn.parentElement.querySelector(".vm-bar i"), time = btn.parentElement.querySelector(".vm-time");
+  if (vmTimer || vmAudio){ stopVM(); btn.innerHTML = ti("play"); return; }
+  const h = store.get("vmheard", {}); h[i] = true; store.set("vmheard", h);
+  const parts = String(v.dur || "0:20").split(":"); const total = (+parts[0]) * 60 + (+parts[1] || 0);
+  btn.innerHTML = ti("pause");
+  if (v.audio){ vmAudio = new Audio(encodeURI(v.audio)); vmAudio.play().catch(() => toast("Can’t play this recording"));
+    vmTimer = setInterval(() => { if (!vmAudio) return; const d = vmAudio.duration || total; bar.style.width = (vmAudio.currentTime / d * 100) + "%"; time.textContent = mmss(d - vmAudio.currentTime);
+      if (vmAudio.ended){ stopVM(); btn.innerHTML = ti("play"); bar.style.width = "0"; time.textContent = v.dur; } }, 250); return; }
+  let t = 0; vmTimer = setInterval(() => { t += .25; bar.style.width = Math.min(100, t / total * 100) + "%"; time.textContent = mmss(total - t);
+    if (t >= total){ stopVM(); btn.innerHTML = ti("play"); bar.style.width = "0"; time.textContent = v.dur; } }, 250);
+}
+function openContact(k){
+  const p = P(k), chat = CHATS.find(c => c.with === k);
+  push(`<div class="nav">${backBtn("Back")}</div><div class="scroll"><div class="ccard">${avatar(k, 96)}<h3>${esc(telName(k))}</h3>
+    ${k === OWNER ? "" : `<div class="cacts"><button data-act="cmsg" data-id="${k}">${ti("msg")}message</button><button data-act="dial" data-id="${k}">${ti("call")}call</button><button data-act="facetime" data-id="${k}">${ti("video")}video</button><button data-act="cmail" data-id="${k}">${ti("mail")}mail</button></div>`}
+    <div class="cfield"><small>mobile</small><span>${esc(p.phone || "•••• ••• ••••")}</span></div>
+    ${p.note ? `<div class="cfield"><small>Notes</small><p>${esc(p.note)}</p></div>` : ""}
+    ${k !== OWNER && chat ? `<button class="cfield" data-act="cmsg" data-id="${k}"><span>Send Message</span></button>` : ""}
+    ${k !== OWNER && (CALLS.favorites || []).includes(k) ? `<div class="cfield"><span style="color:var(--muted)">In Favorites</span></div>` : ""}
+  </div></div>`, { cls: "tel" });
+}
+function startCall(who, video){
+  const label = who && PEOPLE[who] ? telName(who) : (who || "Unknown");
+  push(`<div class="call-top">${who && PEOPLE[who] ? avatar(who, 96) : '<span class="av" style="width:96px;height:96px;background:#6b6578;color:#fff;font-size:40px">#</span>'}<h3>${esc(label)}</h3><p class="call-st">${video ? "FaceTime Video…" : "calling mobile…"}</p></div>
+    <div class="call-grid">
+      <button data-act="ctog"><span>${ti("mute")}</span>mute</button><button data-act="ckp"><span>${ti("grid9")}</span>keypad</button><button data-act="ctog"><span>${ti("speaker")}</span>audio</button>
+      <button data-act="cnote" data-id="Add call"><span>${ti("add")}</span>add call</button><button data-act="ctog"><span>${ti("video")}</span>FaceTime</button><button data-act="cnote" data-id="Contacts"><span>${ti("person")}</span>contacts</button></div>
+    <div class="call-kp">${[1,2,3,4,5,6,7,8,9,"*",0,"#"].map(n => `<button data-act="ctone">${n}</button>`).join("")}</div>
+    <button class="endbtn" data-act="endcall" aria-label="End call">${ti("call")}</button>`,
+    { cls: "call", darkStatus: true, after: v => {
+      v.style.display = "flex"; v.style.flexDirection = "column";
+      const st = v.querySelector(".call-st");
+      v._t1 = setTimeout(() => { st.textContent = "ringing…"; }, 2500);
+      v._t2 = setTimeout(() => { st.textContent = "No Answer"; v._t3 = setTimeout(() => { if (topView() === v) goBack(); }, 1600); }, 11000);
+      v._onClose = () => { clearTimeout(v._t1); clearTimeout(v._t2); clearTimeout(v._t3); };
+    }});
+}
+phone.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]"); if (!el || !phone.contains(el)) return;
+  const a = el.dataset.act, id = el.dataset.id, v = el.closest(".view");
+  switch (a){
+    case "teltab": stopVM(); telShow(id); break;
+    case "recseg": renderRecents(v.querySelector(".tel-body"), id); break;
+    case "dial": e.stopPropagation(); startCall(id); break;
+    case "contact": e.stopPropagation(); openContact(id); break;
+    case "kp": if ((v._num || "").length < 15){ v._num = (v._num || "") + id; v.querySelector(".tel-body").innerHTML = keypadHTML(v._num); } break;
+    case "kpdel": v._num = (v._num || "").slice(0, -1); v.querySelector(".tel-body").innerHTML = keypadHTML(v._num); break;
+    case "kpcall": if (v._num) startCall(v._num); else toast("Type a number first"); break;
+    case "vmopen": { stopVM(); const i = +id; telRoot._vmOpen = telRoot._vmOpen === i ? null : i; v.querySelector(".tel-body").innerHTML = vmHTML(); break; }
+    case "vmplay": playVM(+id, el); break;
+    case "vmdel": { stopVM(); const d = store.get("vmdel", {}); d[id] = true; store.set("vmdel", d); telRoot._vmOpen = null; v.querySelector(".tel-body").innerHTML = vmHTML(); toast("Voicemail deleted"); break; }
+    case "cmsg": { const chat = CHATS.find(c => c.with === id); if (chat) openChat(chat.id); else toast(`No messages with ${telName(id)}`); break; }
+    case "facetime": startCall(id, true); break;
+    case "cmail": toast(`No email saved for ${telName(id)}`); break;
+    case "ctog": el.classList.toggle("on"); break;
+    case "ckp": v.classList.add("kpon"); break;
+    case "ctone": break;
+    case "cnote": toast(`${id} isn’t available during this call`); break;
+    case "endcall": goBack(); break;
+  }
+});
+// tapping outside the in-call keypad brings the buttons back
+phone.addEventListener("click", e => { const v = e.target.closest(".view.call.kpon"); if (v && !e.target.closest(".call-kp") && !e.target.closest('[data-act="ckp"]')) v.classList.remove("kpon"); });
+
+/* swipe from the left edge to go back, like iPhone */
+(() => {
+  let sx = null, sy = 0, done = false;
+  phone.addEventListener("touchstart", e => { const r = phone.getBoundingClientRect(), t = e.touches[0];
+    sx = (t.clientX - r.left < 24 && stack.length) ? t.clientX : null; sy = t.clientY; done = false; }, { passive: true });
+  phone.addEventListener("touchmove", e => { if (sx === null || done) return; const t = e.touches[0];
+    if (t.clientX - sx > 70 && Math.abs(t.clientY - sy) < 60){ done = true; goBack(); } }, { passive: true });
+  phone.addEventListener("touchend", () => { sx = null; }, { passive: true });
+})();
+
+</script>
+</body>
+</html>
